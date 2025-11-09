@@ -1,0 +1,16 @@
+CREATE DATABASE IF NOT EXISTS budgetwallet;
+
+USE budgetwallet;
+
+CREATE TABLE IF NOT EXISTS user (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    username varchar(16) NOT NULL,
+    password TEXT NOT NULL,
+    password_salt VARCHAR(16) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT FALSE,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP(),
+    updated_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP(),
+    CONSTRAINT UQ_user_username UNIQUE (username)
+);
+
