@@ -12,7 +12,7 @@
 
 			<div class="info-card-tooltip">
 				<span class="text-primary-950 bg-primary-400 after:border-b-primary-400">
-					Balance of all your wallets combined
+					Total balance
 				</span>
 			</div>
 		</div>
@@ -57,7 +57,7 @@
     }
 
     .info-card-tooltip > span {
-        @apply py-2 px-4 rounded-lg font-semibold border-2 mt-4 text-sm;
+        @apply py-2 px-4 rounded-lg font-semibold border-2 mt-4;
 		display: block;
 		text-align: center;
 		border-color: transparent;

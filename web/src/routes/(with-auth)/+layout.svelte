@@ -17,6 +17,11 @@
 			<Icon icon="streamline-ultimate:money-wallet-open-bold" />
 			Budget Wallet
 		</a>
+		<div>
+			<a href={resolve("/logout")} class="font-semibold hover:underline">
+				Logout
+			</a>
+		</div>
 	</nav>
 
 	<main class="flex-1 p-6">
