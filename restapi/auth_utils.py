@@ -3,9 +3,10 @@ from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, status
 from pwdlib import PasswordHash
 from sqlmodel import Session, select as sql_select
+from jwt import encode as jwt_encode
 
 from db_models import DbUser
-from main import Settings
+from utils_classes import Settings
 
 password_hasher = PasswordHash.recommended()
 
@@ -30,7 +31,7 @@ def create_token(settings: Settings, user: DbUser, data: dict | None = None, exp
     if isinstance(data, dict):
         data_to_encode.update(data)
 
-    encoded_jwt = jwt.encode(data_to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    encoded_jwt = jwt_encode(data_to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
     return encoded_jwt
 
