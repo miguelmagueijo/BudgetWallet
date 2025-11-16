@@ -1,3 +1,22 @@
-@import 'tailwindcss';
-@plugin '@tailwindcss/forms';
-@plugin '@tailwindcss/typography';
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+
+@theme {
+    --color-primary-0: #edfff3;
+    --color-primary-50: #d6fbe3;
+    --color-primary-100: #acf7c7;
+    --color-primary-200: #83f3aa;
+    --color-primary-300: #6ef19c;
+    --color-primary-400: #30eb72;
+    --color-primary-500: #26bc5b;
+    --color-primary-550: #19a64a;
+    --color-primary-600: #1d8d44;
+    --color-primary-700: #135e2e;
+    --color-primary-800: #0e4622;
+    --color-primary-900: #0a2f17;
+    --color-primary-910: #1C3023;
+    --color-primary-925: #0a1c11;
+    --color-primary-950: #05170b;
+    --color-primary-1000: #060D09;
+}
