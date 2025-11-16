@@ -1,37 +1,106 @@
-<script>
+<script lang="ts">
 	import Icon from "@iconify/svelte";
+
+	let isLoading: boolean = false;
+	let usernameElement: HTMLInputElement;
+	let passwordElement: HTMLInputElement;
+	let errorMsg: string | null = null;
+
+	async function onLoginSubmit() {
+		if (isLoading) {
+			return;
+		}
+
+		isLoading = true;
+
+		const formData = new FormData();
+		formData.append("username", usernameElement.value);
+		formData.append("password", passwordElement.value);
+
+		const res = await fetch("http://localhost:8000/login", {
+			method: "POST",
+			body: formData,
+		});
+
+		if (res.ok) {
+			window.location.replace("/home");
+		} else {
+			if (res.status === 400 || res.status === 401) {
+				try {
+					const resData = await res.json();
+
+					errorMsg = resData.detail;
+				} catch {
+					errorMsg = "Something went wrong! Please contact an administrator";
+				}
+			} else {
+				errorMsg = "Something went wrong! Please contact an administrator";
+			}
+		}
+
+		isLoading = false;
+	}
 </script>
+
+<svelte:head>
+	<title>Log In into Budget Wallet</title>
+</svelte:head>
 
 <div class="flex h-screen items-center justify-center">
 	<div>
-		<div class="flex items-center gap-4">
+		<div class="mb-12 flex items-center gap-4">
 			<Icon
 				class="size-14 text-[#30EB72]"
 				icon="streamline-ultimate:money-wallet-open-bold"
 			/>
 			<h1 class="text-center text-6xl font-bold text-[#30EB72]">Budget Wallet</h1>
 		</div>
-		<div class="mx-auto mt-12 rounded-lg border-2 border-[#1C3023] bg-[#0a1c11] p-14">
+		{#if errorMsg}
+			<div
+				class="mb-6 rounded-lg border-2 border-transparent bg-red-200 p-2 text-center font-semibold text-red-800"
+			>
+				{errorMsg}
+			</div>
+		{/if}
+		<div class="mx-auto rounded-lg border-2 border-[#1C3023] bg-[#0a1c11] p-14">
 			<h2 class="text-center text-4xl font-bold">Login</h2>
-			<form class="mt-6">
+			<form class="mt-6" on:submit|preventDefault={onLoginSubmit}>
 				<div>
 					<label for="lf_username">Username</label>
-					<input id="lf_username" type="text" required />
+					<input
+						id="lf_username"
+						type="text"
+						required
+						class:withErrors={errorMsg}
+						bind:this={usernameElement}
+					/>
 				</div>
 				<div class="mt-4">
 					<label for="lf_password">Password</label>
-					<input id="lf_password" type="password" required />
+					<input
+						id="lf_password"
+						type="password"
+						required
+						class:withErrors={errorMsg}
+						bind:this={passwordElement}
+					/>
 				</div>
-				<button
-					type="submit"
-					class="mt-8 flex w-full cursor-pointer items-center justify-between rounded-lg bg-[#1D8943] p-3 font-bold duration-300 hover:bg-[#19a64a]"
-				>
-					<span> Sign in </span>
-					<Icon icon="mingcute:arrow-right-fill" class="size-6" />
+				<button type="submit" class="login-btn" class:isLoading>
+					{#if isLoading}
+						<span> Logging you in... </span>
+						<Icon icon="gg:spinner" class="size-6 animate-spin" />
+					{:else}
+						<span> Sign in </span>
+						<Icon icon="mingcute:arrow-right-fill" class="size-6" />
+					{/if}
 				</button>
 			</form>
 		</div>
-		<div class="mt-8 opacity-50">
+		<div class="mt-8 text-center opacity-50">
+			To open an account you must contact an administrator
+		</div>
+		<hr class="mx-auto my-4 w-1/3 rounded-full opacity-25" />
+		<div class="opacity-50">
 			<p class="text-center">
 				Developed by
 				<a
@@ -67,5 +136,24 @@
 	input {
 		@apply rounded-lg border-2 border-[#1C3023] bg-[#060D09];
 		width: 100%;
+	}
+
+	input.withErrors {
+		@apply border-red-500;
+	}
+
+	.login-btn {
+		@apply mt-8 rounded-lg bg-[#1D8943] p-3 font-bold duration-300 hover:bg-[#19a64a];
+		width: 100%;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.login-btn.isLoading {
+		@apply bg-gray-600;
+		pointer-events: none;
+		cursor: progress;
 	}
 </style>
