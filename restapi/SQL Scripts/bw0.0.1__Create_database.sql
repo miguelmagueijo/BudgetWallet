@@ -17,7 +17,7 @@ CREATE TABLE "user" (
 CREATE TABLE "wallet" (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    description TEXT NOT NULL,
+    description TEXT,
     icon_path TEXT,
     color_hex VARCHAR(7),
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
@@ -29,7 +29,7 @@ CREATE TABLE "wallet" (
 CREATE TABLE "budget" (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    description TEXT NOT NULL,
+    description TEXT,
     icon_name TEXT,
     color_hex VARCHAR(7),
     is_permanent BOOLEAN DEFAULT FALSE, -- only deletes when wallet is deleted
