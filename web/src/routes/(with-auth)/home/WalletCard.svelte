@@ -1,19 +1,23 @@
 <script lang="ts">
 	import Icon from "@iconify/svelte";
+	import { resolve } from "$app/paths";
 
-	let { title, iconName, color, budgets }: { title: string; iconName: string; color: string; budgets: Budget[] } = $props();
+	let { id, title, iconName, color, budgets }: { id:number, title: string; iconName: string; color: string; budgets: Budget[] } = $props();
 
 	const totalOfBudgets: number = Number(budgets.reduce((total, b) => total + b.money, 0).toFixed(2));
 	const totalBudgetsStrParts = String(totalOfBudgets).split(".");
 	const BAR_COLORS = ["#bb3e03", "#ca6702", "#ee9b00", "#e9d8a6", "#94d2bd"];
+	const detailsRouteResolved = resolve(`/wallet/${id}`);
 </script>
 
 <div class="flex gap-8 rounded-lg border-2 bg-black p-6" style="border-color: {color}">
-	<div class="flex items-center">
+	<a href={detailsRouteResolved} class="flex items-center w-fit">
 		<Icon icon={iconName} class="size-18 stroke-2" style="color: {color}" />
-	</div>
+	</a>
 	<div class="flex-1">
-		<h3 class="text-2xl font-bold text-white">{title}</h3>
+		<a href={detailsRouteResolved} class="hover:underline">
+			<h3 class="text-2xl font-bold text-white">{title}</h3>
+		</a>
 		<div class="my-2">
 			<div class="my-1 flex gap-1 overflow-hidden rounded-lg">
 				{#each budgets as budget, idx (budget.title)}

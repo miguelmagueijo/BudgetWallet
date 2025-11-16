@@ -111,6 +111,7 @@
 	</div>
 	<div class="mt-6 grid grid-cols-4 gap-10">
 		<WalletCard
+			id={1}
 			title="Trading 212"
 			iconName="arcticons:trading-212"
 			color="#00a1d9"
@@ -120,6 +121,7 @@
 			]}
 		/>
 		<WalletCard
+			id={2}
 			title="Trade Republic"
 			iconName="arcticons:traderepublic"
 			color="#FFFFFF"
@@ -132,6 +134,7 @@
 			]}
 		/>
 		<WalletCard
+			id={3}
 			title="Caixa Agricola"
 			iconName="arcticons:camobile"
 			color="#009257"
@@ -142,6 +145,7 @@
 			]}
 		/>
 		<WalletCard
+			id={4}
 			title="Moey!"
 			iconName="arcticons:moey"
 			color="#c3f261"
@@ -150,6 +154,7 @@
 			]}
 		/>
 		<WalletCard
+			id={4}
 			title="Revolut"
 			iconName="arcticons:revolut"
 			color="#FFFFFF"
