@@ -18,29 +18,22 @@
 			Budget Wallet
 		</a>
 		<div>
-			<a href={resolve("/logout")} class="font-semibold hover:underline">
-				Logout
-			</a>
+			<a href={resolve("/logout")} class="font-semibold hover:underline"> Logout </a>
 		</div>
 	</nav>
 
-	<main class="flex-1 p-6">
+	<main class="mb-20 flex-1 p-6">
 		{@render children()}
 	</main>
 
 	<footer class="mt-auto border-t-2 border-t-white/10 bg-primary-950 p-6">
 		<div class="flex items-center justify-between">
 			<div>
-				<a
-					href={resolve("/home")}
-					class="flex items-center gap-2 text-lg font-bold text-[#30EB72]"
-				>
+				<a href={resolve("/home")} class="flex items-center gap-2 text-lg font-bold text-[#30EB72]">
 					<Icon icon="streamline-ultimate:money-wallet-open-bold" />
 					Budget Wallet
 				</a>
-				<div class="text-sm text-green-200 italic">
-					Keep your money tracked across your apps and banks.
-				</div>
+				<div class="text-sm text-green-200 italic">Keep your money tracked across your apps and banks.</div>
 				<div class="text-green-200">
 					<div class="mt-2 flex items-center">
 						<a
@@ -56,9 +49,7 @@
 		</div>
 		<div class="mt-2 text-xs opacity-50">
 			Developed by
-			<a href="https://miguelmagueijo.pt" class="font-bold underline" target="_blank">
-				Miguel Magueijo
-			</a>
+			<a href="https://miguelmagueijo.pt" class="font-bold underline" target="_blank"> Miguel Magueijo </a>
 		</div>
 	</footer>
 </div>
