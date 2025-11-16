@@ -12,7 +12,7 @@
 </svelte:head>
 
 <div class="flex h-screen flex-col">
-	<nav class="flex items-center justify-between bg-[#0a1c11] p-6">
+	<nav class="flex items-center justify-between bg-primary-925 p-6">
 		<a href={resolve("/home")} class="flex items-center gap-2 text-xl font-bold text-[#30EB72]">
 			<Icon icon="streamline-ultimate:money-wallet-open-bold" />
 			Budget Wallet
@@ -23,7 +23,7 @@
 		{@render children()}
 	</main>
 
-	<footer class="mt-auto border-t-2 border-t-white/10 p-6">
+	<footer class="mt-auto border-t-2 border-t-white/10 bg-primary-950 p-6">
 		<div class="flex items-center justify-between">
 			<div>
 				<a

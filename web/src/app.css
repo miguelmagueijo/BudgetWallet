@@ -20,3 +20,26 @@
     --color-primary-950: #05170b;
     --color-primary-1000: #060D09;
 }
+
+.primary-button {
+    @apply border-2 border-transparent font-bold bg-primary-600 text-primary-0 duration-300 rounded-lg font-semibold;
+    cursor: pointer;
+}
+
+.primary-button:hover {
+    @apply bg-primary-400 text-primary-800;
+}
+
+.primary-button:disabled {
+    @apply bg-slate-600 text-primary-0;
+    pointer-events: none;
+}
+
+.primary-button-outline {
+    @apply border-2 border-primary-600 text-primary-50 rounded-lg font-bold duration-300;
+    cursor: pointer;
+}
+
+.primary-button-outline:hover {
+    @apply bg-primary-400 text-primary-800 border-transparent;
+}

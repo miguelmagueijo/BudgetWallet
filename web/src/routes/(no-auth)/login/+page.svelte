@@ -17,25 +17,25 @@
 		formData.append("username", usernameElement.value);
 		formData.append("password", passwordElement.value);
 
-		const res = await fetch("http://localhost:8000/login", {
-			method: "POST",
-			body: formData,
-		});
+		try {
+			const res = await fetch("http://localhost:8000/login", {
+				method: "POST",
+				body: formData,
+			});
 
-		if (res.ok) {
-			window.location.replace("/home");
-		} else {
-			if (res.status === 400 || res.status === 401) {
-				try {
-					const resData = await res.json();
+			if (res.ok) {
+				window.location.replace("/home");
+			} else {
+				if (res.status === 400 || res.status === 401) {
+						const resData = await res.json();
 
-					errorMsg = resData.detail;
-				} catch {
+						errorMsg = resData.detail;
+				} else {
 					errorMsg = "Something went wrong! Please contact an administrator";
 				}
-			} else {
-				errorMsg = "Something went wrong! Please contact an administrator";
 			}
+		} catch {
+			errorMsg = "Something went wrong! Please contact an administrator";
 		}
 
 		isLoading = false;
@@ -48,12 +48,12 @@
 
 <div class="flex h-screen items-center justify-center">
 	<div>
-		<div class="mb-12 flex items-center gap-4">
+		<div class="mb-12 flex items-center gap-4 text-primary-400">
 			<Icon
-				class="size-14 text-[#30EB72]"
+				class="size-14"
 				icon="streamline-ultimate:money-wallet-open-bold"
 			/>
-			<h1 class="text-center text-6xl font-bold text-[#30EB72]">Budget Wallet</h1>
+			<h1 class="text-center text-6xl font-bold">Budget Wallet</h1>
 		</div>
 		{#if errorMsg}
 			<div
@@ -62,7 +62,7 @@
 				{errorMsg}
 			</div>
 		{/if}
-		<div class="mx-auto rounded-lg border-2 border-[#1C3023] bg-[#0a1c11] p-14">
+		<div class="mx-auto rounded-lg border-2 border-primary-900 bg-primary-950 p-14">
 			<h2 class="text-center text-4xl font-bold">Login</h2>
 			<form class="mt-6" on:submit|preventDefault={onLoginSubmit}>
 				<div>
@@ -70,6 +70,7 @@
 					<input
 						id="lf_username"
 						type="text"
+						class="border-2 border-primary-900 bg-black w-full rounded-lg"
 						required
 						class:withErrors={errorMsg}
 						bind:this={usernameElement}
@@ -80,12 +81,13 @@
 					<input
 						id="lf_password"
 						type="password"
+						class="border-2 border-primary-900 bg-black w-full rounded-lg"
 						required
 						class:withErrors={errorMsg}
 						bind:this={passwordElement}
 					/>
 				</div>
-				<button type="submit" class="login-btn" class:isLoading>
+				<button type="submit" class="primary-button w-full flex items-center justify-between py-2 px-4 mt-8" disabled="{isLoading}">
 					{#if isLoading}
 						<span> Logging you in... </span>
 						<Icon icon="gg:spinner" class="size-6 animate-spin" />
@@ -106,7 +108,7 @@
 				<a
 					href="https://miguelmagueijo.pt"
 					target="_blank"
-					class="font-bold underline duration-150 hover:text-[#30EB72]"
+					class="font-bold underline duration-300 hover:text-primary-400"
 				>
 					Miguel Magueijo
 				</a>
@@ -115,7 +117,7 @@
 				<a
 					href="https://github.com/miguelmagueijo/BudgetWallet"
 					target="_blank"
-					class="duration-150 hover:scale-125 hover:text-[#30EB72]"
+					class="duration-300 hover:scale-125 hover:text-primary-400"
 				>
 					<Icon icon="mingcute:github-fill" class="size-6" />
 				</a>
@@ -133,27 +135,7 @@
 		width: 100%;
 	}
 
-	input {
-		@apply rounded-lg border-2 border-[#1C3023] bg-[#060D09];
-		width: 100%;
-	}
-
 	input.withErrors {
-		@apply border-red-500;
-	}
-
-	.login-btn {
-		@apply mt-8 rounded-lg bg-[#1D8943] p-3 font-bold duration-300 hover:bg-[#19a64a];
-		width: 100%;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.login-btn.isLoading {
-		@apply bg-gray-600;
-		pointer-events: none;
-		cursor: progress;
+		@apply border-red-400;
 	}
 </style>
