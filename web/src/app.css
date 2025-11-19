@@ -21,6 +21,20 @@
     --color-primary-1000: #060D09;
 }
 
+
+input[type="color"]::-moz-color-swatch {
+    border: none;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+    border-radius: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border: none;
+}
+
 .primary-button {
     @apply border-2 border-transparent font-bold bg-primary-600 text-primary-0 duration-300 rounded-lg font-semibold;
     cursor: pointer;
