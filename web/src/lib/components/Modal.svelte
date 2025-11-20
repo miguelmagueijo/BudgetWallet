@@ -2,7 +2,14 @@
 	import Icon from "@iconify/svelte";
 	import type { Snippet } from "svelte";
 
-	let { showModal = $bindable(), title, children }: { showModal: boolean; title: string | undefined; children: Snippet } = $props();
+	interface Props {
+		showModal: boolean;
+		title: string | undefined;
+		footer: Snippet | undefined;
+		children: Snippet;
+	}
+
+	let { showModal = $bindable(), title, footer = undefined, children }: Props = $props();
 	let dialogElement: HTMLDialogElement;
 
 	$effect(() => {
@@ -27,7 +34,11 @@
 		<div class="flex-1 p-4">
 			{@render children()}
 		</div>
-		<div class="mt-auto p-4">Footer</div>
+		{#if footer !== undefined}
+			<div class="mt-auto p-4">
+				{@render footer()}
+			</div>
+		{/if}
 	</div>
 </dialog>
 

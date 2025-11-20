@@ -3,7 +3,6 @@
 	import WalletCard from "./WalletCard.svelte";
 	import Modal from "$lib/components/Modal.svelte";
 	import IconWrapper from "$lib/components/IconWrapper.svelte";
-	import ColorPicker from "svelte-awesome-color-picker";
 
 	const DEFAULT_WALLET_ICON = "streamline-ultimate:money-wallet-open-bold";
 
@@ -11,6 +10,7 @@
 	let newWalletColor = $state("#FFFFFF");
 	let newWalletIcon = $state(DEFAULT_WALLET_ICON);
 	let newWalletDescription = $state("");
+	let newWalletMoney = $state(0);
 </script>
 
 <Modal bind:showModal={showAddWalletModal} title="New wallet">
@@ -19,6 +19,17 @@
 			<label class="block font-semibold" for="wallet-name"> Name <span class="text-red-500">*</span> </label>
 			<input id="wallet-name" name="walletName" type="text" class="w-full rounded-lg border-2 border-primary-900 bg-black" required />
 			<small class="opacity-50"> Min 3 characters </small>
+		</div>
+		<div>
+			<label class="block font-semibold" for="wallet-desc"> Start balance <span class="text-red-500">*</span> </label>
+			<input
+				id="wallet-money"
+				name="walletMoney"
+				class="w-full rounded-lg border-2 border-primary-900 bg-black"
+				type="number"
+				bind:value={newWalletMoney}
+				required
+			/>
 		</div>
 		<div>
 			<label class="block font-semibold" for="wallet-desc"> Description </label>
@@ -37,16 +48,13 @@
 		<div class="grid grid-cols-3 gap-4">
 			<div class="col-span-2">
 				<div>
-					<ColorPicker
-						bind:hex={newWalletColor}
-						label="Choose the wallet color"
+					<label class="block font-semibold" for="wallet-color"> Icon </label>
+					<input
+						id="wallet-color"
 						name="walletColor"
-						position="responsive"
-						isAlpha={false}
-						--picker-height="50px"
-						--cp-text-color="white"
-						--cp-bg-color="black"
-						textInputModes={["hex"]}
+						type="color"
+						class="w-full rounded-lg border-2 border-primary-900 bg-black h-11"
+						bind:value={newWalletColor}
 					/>
 				</div>
 				<div class="mt-2">
@@ -75,6 +83,14 @@
 			</div>
 		</div>
 	</form>
+	{#snippet footer()}
+		<button type="button">
+			Cancel
+		</button>
+		<button type="button">
+			Create
+		</button>
+	{/snippet}
 </Modal>
 
 <section class="my-20">
