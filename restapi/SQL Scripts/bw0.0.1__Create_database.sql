@@ -11,7 +11,7 @@ CREATE TABLE user_account (
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
-    CONSTRAINT UQ_user_username UNIQUE (username)
+    CONSTRAINT UQ_userAccount_username UNIQUE (username)
 );
 
 CREATE TABLE wallet (
@@ -24,7 +24,7 @@ CREATE TABLE wallet (
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     user_id INTEGER NOT NULL, -- Owner
-    CONSTRAINT FK_wallet_user_id FOREIGN KEY (user_id) REFERENCES user_account (id)
+    CONSTRAINT FK_wallet_userAccount_id FOREIGN KEY (user_id) REFERENCES user_account (id) ON DELETE CASCADE
 );
 
 CREATE TABLE budget (
@@ -37,7 +37,7 @@ CREATE TABLE budget (
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     wallet_id INTEGER NOT NULL,
-    CONSTRAINT FK_budget_wallet_id FOREIGN KEY (wallet_id) REFERENCES wallet (id)
+    CONSTRAINT FK_budget_wallet_id FOREIGN KEY (wallet_id) REFERENCES wallet (id) ON DELETE CASCADE
 );
 
 CREATE TABLE movement_category (
@@ -59,9 +59,9 @@ CREATE TABLE movement (
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     budget_id INTEGER NOT NULL,
-    CONSTRAINT FK_movement_budget_id FOREIGN KEY (budget_id) REFERENCES budget (id),
+    CONSTRAINT FK_movement_budget_id FOREIGN KEY (budget_id) REFERENCES budget (id) ON DELETE CASCADE,
     category_id INTEGER,
-    CONSTRAINT FK_movement_movementCategory_id FOREIGN KEY (category_id) REFERENCES movement_category (id)
+    CONSTRAINT FK_movement_movementCategory_id FOREIGN KEY (category_id) REFERENCES movement_category (id) ON DELETE SET NULL
 );
 
 --######################################################################################################################
@@ -72,8 +72,8 @@ RETURNS TRIGGER AS $$
 DECLARE
     budget_id budget.id%TYPE;
 BEGIN
-   INSERT INTO budget (name, description, is_permanent, iconify_name, color, wallet_id)
-   VALUES ('Money', 'Default budget, where you money uncategorized is stored. This budget cannot be deleted', TRUE, 'money', NEW.id)
+   INSERT INTO budget (name, description, is_permanent, wallet_id)
+   VALUES ('Money', 'Default budget, where you money uncategorized is stored. This budget cannot be deleted', TRUE, NEW.id)
    RETURNING id INTO budget_id;
 
    IF NEW.start_balance <> 0 THEN
