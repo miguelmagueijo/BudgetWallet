@@ -18,7 +18,7 @@
 		formData.append("password", passwordElement.value);
 
 		try {
-			const res = await fetch("http://localhost:8000/login", {
+			const res = await fetch("http://localhost:5173/api/login", {
 				method: "POST",
 				body: formData,
 			});

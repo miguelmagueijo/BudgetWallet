@@ -94,7 +94,7 @@
 </Modal>
 
 <section class="my-20">
-	<h2 class="mb-4 text-4xl font-bold">Hi, Miguel</h2>
+	<h2 class="mb-4 text-5xl font-bold">Hi, Miguel</h2>
 	<div class="grid grid-cols-3 gap-8">
 		<div class="info-card border-primary-400 bg-primary-925 text-primary-400">
 			<Icon icon="ph:money-wavy" class="size-18" />
