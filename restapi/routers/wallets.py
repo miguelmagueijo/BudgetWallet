@@ -18,9 +18,16 @@ class ReqNewWallet(BaseModel):
 
 @router.get("/")
 async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency):
-    all_wallets = db_session.exec(sql_select(DbWallet).where(DbWallet.user_id == user.id)).all()
+    return db_session.exec(sql_select(DbWallet).where(DbWallet.user == user)).all()
 
-    return {"wallets": all_wallets}
+@router.get("/{wallet_id}")
+async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
+    wallet = db_session.exec(sql_select(DbWallet).where(sql_and_(DbWallet.id == wallet_id, DbWallet.user == user))).first()
+
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    return wallet
 
 @router.post("/new")
 async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqNewWallet, Form()]):
