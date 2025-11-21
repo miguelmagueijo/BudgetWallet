@@ -6,7 +6,7 @@ from sqlmodel import Session, select as sql_select
 from jwt import encode as jwt_encode
 
 from db_models import DbUser
-from utils_classes import Settings
+from dependencies import Settings
 
 password_hasher = PasswordHash.recommended()
 

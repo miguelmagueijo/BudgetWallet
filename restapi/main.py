@@ -1,60 +1,57 @@
 from typing import Annotated
 
-from fastapi import FastAPI, Depends, HTTPException, status, Form, Cookie
+from fastapi import FastAPI, Form
 from fastapi.responses import JSONResponse
-from sqlmodel import create_engine, Session
-from jwt import decode as jwt_decode
+from fastapi.middleware.cors import CORSMiddleware
 
+import dependencies
 from auth_utils import create_token, authenticate_user
-from requests_models import ReqJwtUserData, ReqLogin
-from utils_classes import Settings
+from requests_models import ReqLogin
 
-settings = Settings()
-db_engine = create_engine(settings.db_url)
-app = FastAPI()
+origins = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+]
+
+app = FastAPI(
+    title=dependencies.settings.app_name,
+    version=dependencies.settings.version,
+    contact={
+        "name": "Miguel Magueijo",
+        "url": "https://miguelmagueijo.pt",
+    }
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 ########################################################################################################################
 # Dependencies
 ########################################################################################################################
-def get_db_session():
-    with Session(db_engine) as db_session:
-        yield db_session
-
-async def get_current_user(bw_token: Annotated[str | None, Cookie()]) -> ReqJwtUserData:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = jwt_decode(bw_token, settings.jwt_secret, algorithms=[settings.jwt_algorithm], issuer=settings.jwt_issuer)
-    except Exception as e:
-        print(e)
-        raise credentials_exception
-
-    return ReqJwtUserData(**payload.get("user_data"))
-
-DbSessionDependency = Annotated[Session, Depends(get_db_session)]
-JwtUserDataDependency = Annotated[ReqJwtUserData, Depends(get_current_user)]
-
 
 ########################################################################################################################
 # Routes
 ########################################################################################################################
+from routers.wallets import router as wallets_router
+
+app.include_router(wallets_router)
+
 @app.get("/")
 def root():
-    return {"name": settings.app_name, "version": settings.version}
+    return {"name": dependencies.settings.app_name, "version": dependencies.settings.version}
 
 @app.post("/login")
-async def login(form_data: Annotated[ReqLogin, Form()], db_session: DbSessionDependency):
+async def login(form_data: Annotated[ReqLogin, Form()], db_session: dependencies.DbSessionDependency):
     user = authenticate_user(form_data.username, form_data.password, db_session)
 
     response = JSONResponse(content={"message": "Login successful", "user_id": user.id})
-    response.set_cookie(key="bw_token", value=create_token(settings, user), httponly=True)
+    response.set_cookie(key="bw_token", value=create_token(dependencies.settings, user), path="/", samesite="lax", secure=False, httponly=True)
 
     return response
-
-@app.get("/my-data")
-async def my_data(user: JwtUserDataDependency):
-    return user
