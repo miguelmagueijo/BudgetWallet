@@ -1,0 +1,17 @@
+meta {
+  name: New
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://127.0.0.1:8000/wallets/new
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  name: Trading 212
+  iconify_name: arcticons:trading-212
+  color: #00a1d9
+}
