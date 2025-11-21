@@ -3,7 +3,7 @@
 --######################################################################################################################
 -- TABLES
 --######################################################################################################################
-CREATE TABLE "user" (
+CREATE TABLE user_account (
     id SERIAL PRIMARY KEY,
     username VARCHAR(16) NOT NULL,
     password TEXT NOT NULL,
@@ -14,39 +14,41 @@ CREATE TABLE "user" (
     CONSTRAINT UQ_user_username UNIQUE (username)
 );
 
-CREATE TABLE "wallet" (
+CREATE TABLE wallet (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
-    icon_path TEXT,
-    color_hex VARCHAR(7),
+    iconify_name TEXT,
+    color VARCHAR(7),
+    start_balance REAL NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     user_id INTEGER NOT NULL, -- Owner
-    CONSTRAINT FK_wallet_user_id FOREIGN KEY (user_id) REFERENCES "user" (id)
+    CONSTRAINT FK_wallet_user_id FOREIGN KEY (user_id) REFERENCES user_account (id)
 );
 
-CREATE TABLE "budget" (
+CREATE TABLE budget (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
-    icon_name TEXT,
-    color_hex VARCHAR(7),
+    iconify_name TEXT,
+    color VARCHAR(7),
     is_permanent BOOLEAN DEFAULT FALSE, -- only deletes when wallet is deleted
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     wallet_id INTEGER NOT NULL,
-    CONSTRAINT FK_budget_wallet_id FOREIGN KEY (wallet_id) REFERENCES "wallet" (id)
+    CONSTRAINT FK_budget_wallet_id FOREIGN KEY (wallet_id) REFERENCES wallet (id)
 );
 
-CREATE TABLE "movement_category" (
+CREATE TABLE movement_category (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    color_hex VARCHAR(7)
+    color VARCHAR(7),
+    is_system BOOLEAN NOT NULL DEFAULT FALSE -- if set only the admin can edit this records!
 );
 
-CREATE TABLE "movement" (
+CREATE TABLE movement (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
@@ -57,9 +59,9 @@ CREATE TABLE "movement" (
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     budget_id INTEGER NOT NULL,
-    CONSTRAINT FK_movement_budget_id FOREIGN KEY (budget_id) REFERENCES "budget" (id),
+    CONSTRAINT FK_movement_budget_id FOREIGN KEY (budget_id) REFERENCES budget (id),
     category_id INTEGER,
-    CONSTRAINT FK_movement_movementCategory_id FOREIGN KEY (category_id) REFERENCES "movement_category" (id)
+    CONSTRAINT FK_movement_movementCategory_id FOREIGN KEY (category_id) REFERENCES movement_category (id)
 );
 
 --######################################################################################################################
@@ -67,21 +69,39 @@ CREATE TABLE "movement" (
 --######################################################################################################################
 CREATE OR REPLACE FUNCTION create_default_budget()
 RETURNS TRIGGER AS $$
+DECLARE
+    budget_id budget.id%TYPE;
 BEGIN
-   INSERT INTO "budget" (name, description, is_permanent, icon_name, wallet_id)
-   VALUES ('Money', 'Default budget, where you money uncategorized is stored. This budget cannot be deleted', TRUE, 'money', NEW.id);
+   INSERT INTO budget (name, description, is_permanent, iconify_name, color, wallet_id)
+   VALUES ('Money', 'Default budget, where you money uncategorized is stored. This budget cannot be deleted', TRUE, 'money', NEW.id)
+   RETURNING id INTO budget_id;
+
+   IF NEW.start_balance <> 0 THEN
+       INSERT INTO movement (title, description, amount, is_deposit, is_manual, done_at, budget_id, category_id)
+       VALUES ('Start balance (automatic)',
+               'This movement represents a movement which is the start money',
+               NEW.start_balance,
+               true,
+               false,
+               (now() AT TIME ZONE 'UTC'),
+               budget_id,
+               1);
+   END IF;
 
    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER TRG_AI_Wallet
-AFTER INSERT ON "wallet"
+AFTER INSERT ON wallet
 FOR EACH ROW
 EXECUTE FUNCTION create_default_budget();
 
 --######################################################################################################################
 -- Default data
 --######################################################################################################################
-INSERT INTO "user" (username, password, is_active)
+INSERT INTO user_account (username, password, is_active)
 VALUES ('dev', '$argon2id$v=19$m=16,t=4,p=1$cXlxUWFxc2hmWXVQYmdrdQ$a/pIKF1sqjISk0pGkQWM8+/iR1J0jRN7WdBOAwrh9gw', True);
+
+INSERT INTO movement_category (title, description, color, is_system)
+VALUES ('SYSTEM', 'Movements made automatically by the system', '#FFFFFF', TRUE);
