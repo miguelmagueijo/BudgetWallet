@@ -21,7 +21,7 @@ async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDepen
     return db_session.exec(sql_select(DbWallet).where(DbWallet.user == user)).all()
 
 @router.get("/{wallet_id}")
-async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
+async def get_single_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
     wallet = db_session.exec(sql_select(DbWallet).where(sql_and_(DbWallet.id == wallet_id, DbWallet.user == user))).first()
 
     if not wallet:
