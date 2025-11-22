@@ -17,8 +17,15 @@ class ReqNewWallet(BaseModel):
     color: str | None = Field(default=None, pattern=r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 
 @router.get("/")
-async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency):
-    return db_session.exec(sql_select(DbWallet).where(DbWallet.user == user)).all()
+async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, order_field: str = "name"):
+    select_stmt = sql_select(DbWallet).where(DbWallet.user == user)
+
+    if order_field == "id":
+        select_stmt = select_stmt.order_by(DbWallet.id)
+    else:
+        select_stmt = select_stmt.order_by(DbWallet.name)
+
+    return db_session.exec(select_stmt).all()
 
 @router.get("/{wallet_id}")
 async def get_single_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
