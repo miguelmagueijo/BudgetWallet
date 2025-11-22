@@ -3,14 +3,52 @@
 	import WalletCard from "./WalletCard.svelte";
 	import Modal from "$lib/components/Modal.svelte";
 	import IconWrapper from "$lib/components/IconWrapper.svelte";
+	import { onMount } from "svelte";
 
 	const DEFAULT_WALLET_ICON = "streamline-ultimate:money-wallet-open-bold";
+	const DEFAULT_WALLET_COLOR = "#FFFFFF";
+
+	interface WalletData {
+		id: number;
+		name: string;
+		description: string | null;
+		iconify_name: string | null;
+		color: string | null;
+		user_id: number;
+		start_balance: number;
+	};
 
 	let showAddWalletModal = $state(false);
-	let newWalletColor = $state("#FFFFFF");
+	let walletsData: WalletData[] = $state([]);
+	let loadingWallets = $state(true);
+
+	async function fetchWallets() {
+		loadingWallets = true;
+		try {
+			const res = await fetch("http://localhost:5173/api/wallets/", {
+				credentials: "include"
+			});
+
+			if (res.ok) {
+				walletsData = await res.json();
+			} else {
+				console.error(res.status);
+			}
+		} catch (e) {
+			console.error(e);
+		} finally {
+			loadingWallets = false;
+		}
+	}
+
+	let newWalletColor = $state(DEFAULT_WALLET_COLOR);
 	let newWalletIcon = $state(DEFAULT_WALLET_ICON);
 	let newWalletDescription = $state("");
 	let newWalletMoney = $state(0);
+
+	onMount(() => {
+		fetchWallets();
+	});
 </script>
 
 <Modal bind:showModal={showAddWalletModal} title="New wallet">
@@ -131,6 +169,9 @@
 	</div>
 	<div class="my-4">
 		<form class="flex items-center gap-4">
+			<button type="button" class="rounded-lg border-2 border-primary-700 bg-black p-3 cursor-pointer group" onclick={fetchWallets}>
+				<Icon icon="tabler:refresh" class="size-6 duration-300 group-hover:-rotate-180"/>
+			</button>
 			<div class="flex w-fit items-center rounded-lg border-2 border-primary-700 bg-black p-1 px-2">
 				<Icon icon="ic:baseline-search" class="size-6 text-primary-700" />
 				<input type="text" class="w-[450px] rounded-lg border-0 bg-transparent text-white focus:ring-0" placeholder="Filter by name" />
@@ -146,52 +187,72 @@
 		</form>
 	</div>
 	<div class="mt-6 grid grid-cols-4 gap-10">
-		<WalletCard
-			id={1}
-			title="Trading 212"
-			iconName="arcticons:trading-212"
-			color="#00a1d9"
-			budgets={[
-				{ title: "New monitor", money: 291.2 },
-				{ title: "Car fix", money: 523.2 },
-			]}
-		/>
-		<WalletCard
-			id={2}
-			title="Trade Republic"
-			iconName="arcticons:traderepublic"
-			color="#FFFFFF"
-			budgets={[
-				{ title: "New monitor", money: 291.2 },
-				{ title: "Car fix", money: 523.2 },
-				{ title: "Television", money: 923.23 },
-				{ title: "TV2", money: 923.23 },
-				{ title: "TV3", money: 923.23 },
-			]}
-		/>
-		<WalletCard
-			id={3}
-			title="Caixa Agricola"
-			iconName="arcticons:camobile"
-			color="#009257"
-			budgets={[
-				{ title: "New monitor", money: 291.2 },
-				{ title: "Car fix", money: 523.2 },
-				{ title: "Television", money: 923.23 },
-			]}
-		/>
-		<WalletCard id={4} title="Moey!" iconName="arcticons:moey" color="#c3f261" budgets={[{ title: "Television", money: 923.23 }]} />
-		<WalletCard
-			id={4}
-			title="Revolut"
-			iconName="arcticons:revolut"
-			color="#FFFFFF"
-			budgets={[
-				{ title: "New monitor", money: 291.2 },
-				{ title: "Car fix", money: 523.2 },
-				{ title: "Television", money: 923.23 },
-			]}
-		/>
+		{#if loadingWallets}
+			<div class="col-span-4 h-32 border-2 border-transparent rounded-lg flex items-center justify-center bg-primary-925 text-2xl font-bold gap-4">
+				<Icon icon="gg:spinner" class="size-8 animate-spin" />
+				Loading...
+			</div>
+		{:else}
+			{#each walletsData as wallet (wallet.id)}
+				<WalletCard
+					id={wallet.id}
+					title={wallet.name}
+					iconName={wallet.iconify_name ?? DEFAULT_WALLET_ICON}
+					color={wallet.color ?? DEFAULT_WALLET_COLOR}
+					budgets={[
+						{ title: "New monitor", money: 291.2 },
+						{ title: "Car fix", money: 523.2 },
+					]}
+				/>
+			{/each}
+		{/if}
+
+		<!--		<WalletCard-->
+		<!--			id={1}-->
+		<!--			title="Trading 212"-->
+		<!--			iconName="arcticons:trading-212"-->
+		<!--			color="#00a1d9"-->
+		<!--			budgets={[-->
+		<!--				{ title: "New monitor", money: 291.2 },-->
+		<!--				{ title: "Car fix", money: 523.2 },-->
+		<!--			]}-->
+		<!--		/>-->
+		<!--		<WalletCard-->
+		<!--			id={2}-->
+		<!--			title="Trade Republic"-->
+		<!--			iconName="arcticons:traderepublic"-->
+		<!--			color="#FFFFFF"-->
+		<!--			budgets={[-->
+		<!--				{ title: "New monitor", money: 291.2 },-->
+		<!--				{ title: "Car fix", money: 523.2 },-->
+		<!--				{ title: "Television", money: 923.23 },-->
+		<!--				{ title: "TV2", money: 923.23 },-->
+		<!--				{ title: "TV3", money: 923.23 },-->
+		<!--			]}-->
+		<!--		/>-->
+		<!--		<WalletCard-->
+		<!--			id={3}-->
+		<!--			title="Caixa Agricola"-->
+		<!--			iconName="arcticons:camobile"-->
+		<!--			color="#009257"-->
+		<!--			budgets={[-->
+		<!--				{ title: "New monitor", money: 291.2 },-->
+		<!--				{ title: "Car fix", money: 523.2 },-->
+		<!--				{ title: "Television", money: 923.23 },-->
+		<!--			]}-->
+		<!--		/>-->
+		<!--		<WalletCard id={4} title="Moey!" iconName="arcticons:moey" color="#c3f261" budgets={[{ title: "Television", money: 923.23 }]} />-->
+		<!--		<WalletCard-->
+		<!--			id={4}-->
+		<!--			title="Revolut"-->
+		<!--			iconName="arcticons:revolut"-->
+		<!--			color="#FFFFFF"-->
+		<!--			budgets={[-->
+		<!--				{ title: "New monitor", money: 291.2 },-->
+		<!--				{ title: "Car fix", money: 523.2 },-->
+		<!--				{ title: "Television", money: 923.23 },-->
+		<!--			]}-->
+		<!--		/>-->
 		<!--		<div class="flex gap-8 rounded-lg border-2 border-white bg-black p-6">-->
 		<!--			<div class="flex items-center">-->
 		<!--				<Icon icon="arcticons:traderepublic" class="size-18 stroke-2 text-white" />-->
