@@ -4,6 +4,8 @@
 	import Modal from "$lib/components/Modal.svelte";
 	import IconWrapper from "$lib/components/IconWrapper.svelte";
 	import { onMount } from "svelte";
+	import { DataStore } from "$lib/data.svelte";
+	import type { KeyboardEventHandler } from "svelte/elements";
 
 	const DEFAULT_WALLET_ICON = "streamline-ultimate:money-wallet-open-bold";
 	const DEFAULT_WALLET_COLOR = "#FFFFFF";
@@ -18,16 +20,15 @@
 		start_balance: number;
 	}
 
+	let walletStore: DataStore<WalletData> = new DataStore<WalletData>();
 	let showAddWalletModal = $state(false);
-	let walletsData: WalletData[] = $state([]);
-	let loadingWallets = $state(true);
 
 	function fetchWallets(ignoreFlag = false) {
-		if (!ignoreFlag && loadingWallets) {
+		if (!ignoreFlag && walletStore.loading) {
 			return;
 		}
 
-		loadingWallets = true;
+		walletStore.loading = true;
 
 		fetch("http://localhost:5173/api/wallets/", {
 			credentials: "include",
@@ -40,15 +41,25 @@
 				return res.json();
 			})
 			.then((data) => {
-				walletsData = data;
+				walletStore.setData(data);
 			})
 			.catch((err) => {
 				console.error(err);
 			})
 			.finally(() => {
-				loadingWallets = false;
+				walletStore.loading = false;
 			});
 	}
+
+	const handleFilterWalletKeyup: KeyboardEventHandler<HTMLInputElement> = (event) => {
+		const value = event.currentTarget.value;
+
+		if (!value) {
+			walletStore.resetFilter();
+		} else {
+			walletStore.applyFilter((element) => element.name.toLowerCase().includes(value.toLowerCase()));
+		}
+	};
 
 	let newWalletColor = $state(DEFAULT_WALLET_COLOR);
 	let newWalletIcon = $state(DEFAULT_WALLET_ICON);
@@ -180,12 +191,17 @@
 	</div>
 	<div class="my-4">
 		<form class="flex items-center gap-4">
-			<button type="button" class="group cursor-pointer rounded-lg border-2 border-primary-700 bg-black p-3" onclick={fetchWallets}>
+			<button type="button" class="group cursor-pointer rounded-lg border-2 border-primary-700 bg-black p-3" onclick={() => fetchWallets()}>
 				<Icon icon="tabler:refresh" class="size-6 duration-300 group-hover:-rotate-180" />
 			</button>
 			<div class="flex w-fit items-center rounded-lg border-2 border-primary-700 bg-black p-1 px-2">
 				<Icon icon="ic:baseline-search" class="size-6 text-primary-700" />
-				<input type="text" class="w-[450px] rounded-lg border-0 bg-transparent text-white focus:ring-0" placeholder="Filter by name" />
+				<input
+					type="text"
+					class="w-[450px] rounded-lg border-0 bg-transparent text-white focus:ring-0"
+					onkeyup={handleFilterWalletKeyup}
+					placeholder="Filter by name"
+				/>
 			</div>
 			<div>
 				<select class="w-[150px] rounded-lg border-2 border-primary-700 bg-black p-3 font-semibold text-green-100">
@@ -198,12 +214,12 @@
 		</form>
 	</div>
 	<div class="mt-6 grid grid-cols-4 gap-8">
-		{#if loadingWallets}
+		{#if walletStore.loading}
 			{#each [1, 2, 3, 4] as i (i)}
 				<WalletCard id={-i} title="" iconName="" color="" budgets={[]} />
 			{/each}
 		{:else}
-			{#each walletsData as wallet (wallet.id)}
+			{#each walletStore.dataOut as wallet (wallet.id)}
 				<WalletCard
 					id={wallet.id}
 					title={wallet.name}
