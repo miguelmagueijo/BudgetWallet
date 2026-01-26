@@ -114,7 +114,7 @@
 						bind:value={newWalletIcon}
 					/>
 					<small class="opacity-50">
-						Icon name from: <a class="font-bold underline" href="https://icon-sets.iconify.design/" target="_blank">Iconify</a>
+						Icon name must be from: <a class="font-bold underline" href="https://icon-sets.iconify.design/" target="_blank">Iconify</a>
 					</small>
 				</div>
 			</div>
@@ -131,8 +131,10 @@
 		</div>
 	</form>
 	{#snippet footer()}
-		<button type="button"> Cancel </button>
-		<button type="button"> Create </button>
+		<div class="flex justify-end gap-4">
+			<button type="button" class="primary-button px-4 py-2"> Create wallet </button>
+			<button class="primary-button-outline px-4 py-2" type="button" onclick={() => (showAddWalletModal = false)}> Cancel </button>
+		</div>
 	{/snippet}
 </Modal>
 
