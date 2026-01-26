@@ -2,7 +2,15 @@
 	import Icon from "@iconify/svelte";
 	import { resolve } from "$app/paths";
 
-	let { id, title, iconName, color, budgets }: { id:number, title: string; iconName: string; color: string; budgets: Budget[] } = $props();
+	interface Props {
+		id: number;
+		title: string;
+		iconName: string;
+		color: string;
+		budgets: Budget[];
+	}
+
+	let { id, title, iconName, color, budgets }: Props = $props();
 
 	const totalOfBudgets: number = Number(budgets.reduce((total, b) => total + b.money, 0).toFixed(2));
 	const totalBudgetsStrParts = String(totalOfBudgets).split(".");
@@ -10,50 +18,65 @@
 	const detailsRouteResolved = resolve(`/wallet/${id}`);
 </script>
 
-<div class="flex gap-8 rounded-lg border-2 bg-black p-6" style="border-color: {color}">
-	<a href={detailsRouteResolved} class="flex items-center w-fit">
-		<Icon icon={iconName} class="size-18 stroke-2" style="color: {color}" />
-	</a>
-	<div class="flex-1">
-		<a href={detailsRouteResolved} class="hover:underline">
-			<h3 class="text-2xl font-bold text-white">{title}</h3>
+<div
+	class="flex animate-pulse items-center gap-4 rounded-lg border-2 bg-black p-6"
+	class:border-primary-900={id < 0}
+	class:animate-pulse={id < 0}
+	style:border-color={color ? color : ""}
+>
+	{#if id < 0}
+		<div class="size-20 rounded-lg bg-primary-900"></div>
+	{:else}
+		<a href={detailsRouteResolved} class="flex w-fit items-center">
+			<Icon icon={iconName} class="size-20 stroke-2" style="color: {color}" />
 		</a>
-		<div class="my-2">
-			<div class="my-1 flex gap-1 overflow-hidden rounded-lg">
-				{#each budgets as budget, idx (budget.title)}
-					<div
-						title={budget.title}
-						class="h-2"
-						style="width: {(budget.money / totalOfBudgets) * 100}%; background-color: {BAR_COLORS[idx % BAR_COLORS.length]}"
-					></div>
-				{/each}
-			</div>
-			<div class="flex items-center justify-between">
-				<div class="budgets-info">
-					<p class="text-white/50 select-none">
-						<i class="text-xs">Budgets:</i> <b>{budgets.length}</b>
-					</p>
-					<Icon icon="ic:round-info" class="text-white/50" />
-					<div class="budgets-info-tooltip">
-						<ul>
-							{#each budgets as budget, idx (budget.title)}
-								<li>
-									<i>{budget.title}</i>
-									<b style="color: {BAR_COLORS[idx % BAR_COLORS.length]};"><b>{budget.money}</b><small>€</small></b>
-								</li>
-							{/each}
-						</ul>
-					</div>
+	{/if}
+	<div class="flex-1">
+		{#if id < 0}
+			<div class="h-[24px] w-full rounded-lg bg-primary-900"></div>
+			<div class="mt-2 h-12 w-full rounded-lg bg-primary-900"></div>
+		{:else}
+			<a href={detailsRouteResolved} class="hover:underline">
+				<h3 class="text-2xl font-bold text-white">{title}</h3>
+			</a>
+			<div class="mt-auto">
+				<div class="my-1 flex gap-1 overflow-hidden rounded-lg">
+					{#each budgets as budget, idx (budget.title)}
+						<div
+							title={budget.title}
+							class="h-2"
+							style="width: {(budget.money / totalOfBudgets) * 100}%; background-color: {BAR_COLORS[idx % BAR_COLORS.length]}"
+						></div>
+					{/each}
 				</div>
-				<p class="text-right text-xl">
-					<span class="font-bold" style="color: {color}">{totalBudgetsStrParts[0]}</span>{#if totalBudgetsStrParts.length > 1}<span
-							class="text-sm opacity-75" style="color: {color}">.{totalBudgetsStrParts[1]}</span
-						>{/if}
-					<span class="text-sm">€</span>
-				</p>
+				<div class="flex items-center justify-between">
+					<div class="budgets-info">
+						<p class="text-white/50 select-none">
+							<i class="text-xs">Budgets:</i> <b>{budgets.length}</b>
+						</p>
+						<Icon icon="ic:round-info" class="text-white/50" />
+						<div class="budgets-info-tooltip">
+							<ul>
+								{#each budgets as budget, idx (budget.title)}
+									<li>
+										<i>{budget.title}</i>
+										<b style="color: {BAR_COLORS[idx % BAR_COLORS.length]};"><b>{budget.money}</b><small>€</small></b>
+									</li>
+								{/each}
+							</ul>
+						</div>
+					</div>
+					<p class="text-right text-xl">
+						<span class="font-bold" style="color: {color}">{totalBudgetsStrParts[0]}</span>{#if totalBudgetsStrParts.length > 1}<span
+								class="text-sm opacity-75"
+								style="color: {color}">.{totalBudgetsStrParts[1]}</span
+							>{/if}
+						<span class="text-sm">€</span>
+					</p>
+				</div>
+				<!--<div class="text-xs opacity-50">Last change at: <b>20-02-2025</b></div>-->
 			</div>
-			<!--<div class="text-xs opacity-50">Last change at: <b>20-02-2025</b></div>-->
-		</div>
+		{/if}
 	</div>
 </div>
 

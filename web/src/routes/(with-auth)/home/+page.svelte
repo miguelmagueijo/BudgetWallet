@@ -16,29 +16,38 @@
 		color: string | null;
 		user_id: number;
 		start_balance: number;
-	};
+	}
 
 	let showAddWalletModal = $state(false);
 	let walletsData: WalletData[] = $state([]);
 	let loadingWallets = $state(true);
 
-	async function fetchWallets() {
-		loadingWallets = true;
-		try {
-			const res = await fetch("http://localhost:5173/api/wallets/", {
-				credentials: "include"
-			});
-
-			if (res.ok) {
-				walletsData = await res.json();
-			} else {
-				console.error(res.status);
-			}
-		} catch (e) {
-			console.error(e);
-		} finally {
-			loadingWallets = false;
+	function fetchWallets(ignoreFlag = false) {
+		if (!ignoreFlag && loadingWallets) {
+			return;
 		}
+
+		loadingWallets = true;
+
+		fetch("http://localhost:5173/api/wallets/", {
+			credentials: "include",
+		})
+			.then((res) => {
+				if (!res.ok) {
+					throw new Error(`HTTP error ${res.status}`);
+				}
+
+				return res.json();
+			})
+			.then((data) => {
+				walletsData = data;
+			})
+			.catch((err) => {
+				console.error(err);
+			})
+			.finally(() => {
+				loadingWallets = false;
+			});
 	}
 
 	let newWalletColor = $state(DEFAULT_WALLET_COLOR);
@@ -46,8 +55,8 @@
 	let newWalletDescription = $state("");
 	let newWalletMoney = $state(0);
 
-	onMount(() => {
-		fetchWallets();
+	onMount(async () => {
+		fetchWallets(true);
 	});
 </script>
 
@@ -91,7 +100,7 @@
 						id="wallet-color"
 						name="walletColor"
 						type="color"
-						class="w-full rounded-lg border-2 border-primary-900 bg-black h-11"
+						class="h-11 w-full rounded-lg border-2 border-primary-900 bg-black"
 						bind:value={newWalletColor}
 					/>
 				</div>
@@ -122,16 +131,12 @@
 		</div>
 	</form>
 	{#snippet footer()}
-		<button type="button">
-			Cancel
-		</button>
-		<button type="button">
-			Create
-		</button>
+		<button type="button"> Cancel </button>
+		<button type="button"> Create </button>
 	{/snippet}
 </Modal>
 
-<section class="my-20">
+<section class="my-10">
 	<h2 class="mb-4 text-5xl font-bold">Hi, Miguel</h2>
 	<div class="grid grid-cols-3 gap-8">
 		<div class="info-card border-primary-400 bg-primary-925 text-primary-400">
@@ -162,15 +167,11 @@
 <section>
 	<div class="flex items-end justify-between">
 		<h2 class="text-4xl font-bold">Your wallets</h2>
-		<button type="button" class="primary-button-outline flex items-center gap-1 px-4 py-2" onclick={() => (showAddWalletModal = true)}>
-			<span>New Wallet</span>
-			<Icon icon="typcn:plus" class="size-5" />
-		</button>
 	</div>
 	<div class="my-4">
 		<form class="flex items-center gap-4">
-			<button type="button" class="rounded-lg border-2 border-primary-700 bg-black p-3 cursor-pointer group" onclick={fetchWallets}>
-				<Icon icon="tabler:refresh" class="size-6 duration-300 group-hover:-rotate-180"/>
+			<button type="button" class="group cursor-pointer rounded-lg border-2 border-primary-700 bg-black p-3" onclick={fetchWallets}>
+				<Icon icon="tabler:refresh" class="size-6 duration-300 group-hover:-rotate-180" />
 			</button>
 			<div class="flex w-fit items-center rounded-lg border-2 border-primary-700 bg-black p-1 px-2">
 				<Icon icon="ic:baseline-search" class="size-6 text-primary-700" />
@@ -186,12 +187,11 @@
 			</div>
 		</form>
 	</div>
-	<div class="mt-6 grid grid-cols-4 gap-10">
+	<div class="mt-6 grid grid-cols-4 gap-8">
 		{#if loadingWallets}
-			<div class="col-span-4 h-32 border-2 border-transparent rounded-lg flex items-center justify-center bg-primary-925 text-2xl font-bold gap-4">
-				<Icon icon="gg:spinner" class="size-8 animate-spin" />
-				Loading...
-			</div>
+			{#each [1, 2, 3, 4] as i (i)}
+				<WalletCard id={-i} title="" iconName="" color="" budgets={[]} />
+			{/each}
 		{:else}
 			{#each walletsData as wallet (wallet.id)}
 				<WalletCard
@@ -206,68 +206,16 @@
 				/>
 			{/each}
 		{/if}
-
-		<!--		<WalletCard-->
-		<!--			id={1}-->
-		<!--			title="Trading 212"-->
-		<!--			iconName="arcticons:trading-212"-->
-		<!--			color="#00a1d9"-->
-		<!--			budgets={[-->
-		<!--				{ title: "New monitor", money: 291.2 },-->
-		<!--				{ title: "Car fix", money: 523.2 },-->
-		<!--			]}-->
-		<!--		/>-->
-		<!--		<WalletCard-->
-		<!--			id={2}-->
-		<!--			title="Trade Republic"-->
-		<!--			iconName="arcticons:traderepublic"-->
-		<!--			color="#FFFFFF"-->
-		<!--			budgets={[-->
-		<!--				{ title: "New monitor", money: 291.2 },-->
-		<!--				{ title: "Car fix", money: 523.2 },-->
-		<!--				{ title: "Television", money: 923.23 },-->
-		<!--				{ title: "TV2", money: 923.23 },-->
-		<!--				{ title: "TV3", money: 923.23 },-->
-		<!--			]}-->
-		<!--		/>-->
-		<!--		<WalletCard-->
-		<!--			id={3}-->
-		<!--			title="Caixa Agricola"-->
-		<!--			iconName="arcticons:camobile"-->
-		<!--			color="#009257"-->
-		<!--			budgets={[-->
-		<!--				{ title: "New monitor", money: 291.2 },-->
-		<!--				{ title: "Car fix", money: 523.2 },-->
-		<!--				{ title: "Television", money: 923.23 },-->
-		<!--			]}-->
-		<!--		/>-->
-		<!--		<WalletCard id={4} title="Moey!" iconName="arcticons:moey" color="#c3f261" budgets={[{ title: "Television", money: 923.23 }]} />-->
-		<!--		<WalletCard-->
-		<!--			id={4}-->
-		<!--			title="Revolut"-->
-		<!--			iconName="arcticons:revolut"-->
-		<!--			color="#FFFFFF"-->
-		<!--			budgets={[-->
-		<!--				{ title: "New monitor", money: 291.2 },-->
-		<!--				{ title: "Car fix", money: 523.2 },-->
-		<!--				{ title: "Television", money: 923.23 },-->
-		<!--			]}-->
-		<!--		/>-->
-		<!--		<div class="flex gap-8 rounded-lg border-2 border-white bg-black p-6">-->
-		<!--			<div class="flex items-center">-->
-		<!--				<Icon icon="arcticons:traderepublic" class="size-18 stroke-2 text-white" />-->
-		<!--			</div>-->
-		<!--			<div>-->
-		<!--				<h3 class="text-2xl font-bold">Trade Republic</h3>-->
-		<!--				<div class="flex items-center gap-1">-->
-		<!--					<p>Budgets: 5</p>-->
-		<!--					<Icon icon="ic:round-info" />-->
-		<!--				</div>-->
-		<!--				<p>-->
-		<!--					Money: <span class="font-bold">5000</span> <small>€</small>-->
-		<!--				</p>-->
-		<!--			</div>-->
-		<!--		</div>-->
+	</div>
+	<div class="mt-4">
+		<button
+			type="button"
+			class="primary-button-outline flex w-full items-center justify-center gap-1 py-5"
+			onclick={() => (showAddWalletModal = true)}
+		>
+			<span>Create new wallet</span>
+			<Icon icon="typcn:plus" class="size-5" />
+		</button>
 	</div>
 </section>
 
