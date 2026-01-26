@@ -20,17 +20,19 @@
 		</a>
 		<div class="flex items-center gap-4">
 			<div class="group relative">
-				<div class="flex min-w-[125px] items-center justify-between gap-4 rounded-lg bg-black px-3 py-2 group-hover:rounded-b-none">
+				<div
+					class="flex items-center justify-between gap-4 rounded-lg border-2 border-transparent bg-primary-1000 px-3 py-2 group-hover:rounded-b-none group-hover:border-primary-900 group-hover:border-b-primary-1000"
+				>
 					<b>Miguel</b>
-					<div class="flex size-8 items-center justify-center rounded-full bg-white text-black">M</div>
+					<div class="flex size-8 items-center justify-center rounded-full bg-primary-0 text-primary-1000 select-none">M</div>
 				</div>
 				<div class="absolute top-full right-0 hidden w-[250px] group-hover:block">
-					<div class="text-normal rounded-lg rounded-tr-none bg-black p-4">
+					<div class="text-normal -mt-0.5 rounded-lg rounded-tr-none border-2 border-primary-900 bg-primary-1000 p-4">
 						<ul class="space-y-3">
 							<li>
 								<a
 									href={resolve("/account/settings/")}
-									class="flex items-center gap-2 rounded-lg px-2 py-1 font-semibold hover:bg-white hover:text-black"
+									class="flex items-center gap-2 rounded-lg px-2 py-1 font-semibold duration-300 hover:bg-primary-0 hover:text-primary-1000"
 								>
 									<Icon icon="mdi:account-cog" class="size-5" />
 									<span>Account settings</span>
@@ -40,7 +42,7 @@
 								<!-- eslint-disable svelte/no-navigation-without-resolve -->
 								<a
 									href="/logout"
-									class="flex items-center justify-between rounded-lg border-2 border-red-500 px-2 py-1 font-semibold text-red-500 duration-300 hover:bg-red-500 hover:text-red-950"
+									class="flex items-center justify-between rounded-lg border-2 border-red-600 px-2 py-1 font-semibold text-red-600 duration-300 hover:bg-red-600 hover:text-red-950"
 								>
 									<span>Logout</span>
 									<Icon icon="ic:round-logout" class="size-5 stroke-2" />
