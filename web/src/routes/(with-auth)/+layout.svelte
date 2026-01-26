@@ -13,13 +13,43 @@
 </svelte:head>
 
 <div class="flex h-screen flex-col">
-	<nav class="flex items-center justify-between bg-primary-925 p-6">
+	<nav class="flex items-center justify-between bg-primary-925 px-6 py-4">
 		<a href={resolve("/home")} class="flex items-center gap-2 text-xl font-bold text-[#30EB72]">
 			<Icon icon="streamline-ultimate:money-wallet-open-bold" />
 			Budget Wallet
 		</a>
-		<div>
-			<a href={resolve("/logout")} class="font-semibold hover:underline"> Logout </a>
+		<div class="flex items-center gap-4">
+			<div class="group relative">
+				<div class="flex min-w-[125px] items-center justify-between gap-4 rounded-lg bg-black px-3 py-2 group-hover:rounded-b-none">
+					<b>Miguel</b>
+					<div class="flex size-8 items-center justify-center rounded-full bg-white text-black">M</div>
+				</div>
+				<div class="absolute top-full right-0 hidden w-[250px] group-hover:block">
+					<div class="text-normal rounded-lg rounded-tr-none bg-black p-4">
+						<ul class="space-y-3">
+							<li>
+								<a
+									href={resolve("/account/settings/")}
+									class="flex items-center gap-2 rounded-lg px-2 py-1 font-semibold hover:bg-white hover:text-black"
+								>
+									<Icon icon="mdi:account-cog" class="size-5" />
+									<span>Account settings</span>
+								</a>
+							</li>
+							<li>
+								<!-- eslint-disable svelte/no-navigation-without-resolve -->
+								<a
+									href="/logout"
+									class="flex items-center justify-between rounded-lg border-2 border-red-500 px-2 py-1 font-semibold text-red-500 duration-300 hover:bg-red-500 hover:text-red-950"
+								>
+									<span>Logout</span>
+									<Icon icon="ic:round-logout" class="size-5 stroke-2" />
+								</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
 		</div>
 	</nav>
 
