@@ -53,6 +53,7 @@
 	let newWalletColor = $state(DEFAULT_WALLET_COLOR);
 	let newWalletIcon = $state(DEFAULT_WALLET_ICON);
 	let newWalletDescription = $state("");
+	let newWalletName = $state("");
 	let newWalletMoney = $state(0);
 
 	onMount(async () => {
@@ -64,7 +65,14 @@
 	<form class="max-w-[500px] space-y-2">
 		<div>
 			<label class="block font-semibold" for="wallet-name"> Name <span class="text-red-500">*</span> </label>
-			<input id="wallet-name" name="walletName" type="text" class="w-full rounded-lg border-2 border-primary-900 bg-black" required />
+			<input
+				id="wallet-name"
+				name="walletName"
+				type="text"
+				class="w-full rounded-lg border-2 border-primary-900 bg-black"
+				bind:value={newWalletName}
+				required
+			/>
 			<small class="opacity-50"> Min 3 characters </small>
 		</div>
 		<div>
@@ -213,7 +221,14 @@
 		<button
 			type="button"
 			class="primary-button-outline flex w-full items-center justify-center gap-1 py-5"
-			onclick={() => (showAddWalletModal = true)}
+			onclick={() => {
+				showAddWalletModal = true;
+				newWalletName = "";
+				newWalletDescription = "";
+				newWalletMoney = 0;
+				newWalletColor = DEFAULT_WALLET_COLOR;
+				newWalletIcon = DEFAULT_WALLET_ICON;
+			}}
 		>
 			<span>Create new wallet</span>
 			<Icon icon="typcn:plus" class="size-5" />
