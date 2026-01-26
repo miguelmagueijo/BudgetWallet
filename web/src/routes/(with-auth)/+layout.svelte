@@ -3,6 +3,7 @@
 	import favicon from "$lib/assets/favicon.svg";
 	import Icon from "@iconify/svelte";
 	import { resolve } from "$app/paths";
+	import { version } from "$app/environment";
 
 	let { children } = $props();
 </script>
@@ -47,9 +48,12 @@
 				</div>
 			</div>
 		</div>
-		<div class="mt-2 text-xs opacity-50">
-			Developed by
-			<a href="https://miguelmagueijo.pt" class="font-bold underline" target="_blank"> Miguel Magueijo </a>
+		<div class="mt-2 flex justify-between text-xs opacity-50">
+			<div>
+				Developed by
+				<a href="https://miguelmagueijo.pt" class="font-bold underline" target="_blank"> Miguel Magueijo </a>
+			</div>
+			<div>V{version}</div>
 		</div>
 	</footer>
 </div>
