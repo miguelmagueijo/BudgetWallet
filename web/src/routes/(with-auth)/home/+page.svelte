@@ -21,6 +21,7 @@
 	}
 
 	let walletStore: DataStore<WalletData> = new DataStore<WalletData>();
+	let walletsSortValue: string = $state("name");
 	let showAddWalletModal = $state(false);
 
 	function fetchWallets(ignoreFlag = false) {
@@ -61,6 +62,37 @@
 		}
 	};
 
+	const handleSortWalletChange = () => {
+		switch (walletsSortValue) {
+			case "balance":
+			case "balance-desc":
+				// TODO: implement
+				walletStore.resetSort();
+				break;
+			case "name-desc":
+				walletStore.applySort((a, b) => {
+					if (a.name > b.name) {
+						return -1;
+					} else if (a.name < b.name) {
+						return 1;
+					} else {
+						return 0;
+					}
+				});
+				break;
+			default:
+				walletStore.applySort((a, b) => {
+					if (a.name > b.name) {
+						return 1;
+					} else if (a.name < b.name) {
+						return -1;
+					} else {
+						return 0;
+					}
+				});
+		}
+	};
+
 	let newWalletColor = $state(DEFAULT_WALLET_COLOR);
 	let newWalletIcon = $state(DEFAULT_WALLET_ICON);
 	let newWalletDescription = $state("");
@@ -68,6 +100,7 @@
 	let newWalletMoney = $state(0);
 
 	onMount(async () => {
+		handleSortWalletChange(); // add sort before fetching data
 		fetchWallets(true);
 	});
 </script>
@@ -204,11 +237,17 @@
 				/>
 			</div>
 			<div>
-				<select class="w-[150px] rounded-lg border-2 border-primary-700 bg-black p-3 font-semibold text-green-100">
+				<select
+					class="w-fit rounded-lg border-2 border-primary-700 bg-black p-3 pr-10 font-semibold text-green-100"
+					bind:value={walletsSortValue}
+					onchange={handleSortWalletChange}
+				>
 					<!-- TODO: implement favorites -->
 					<!-- <option>Favorites</option> -->
-					<option>Name</option>
-					<option>Balance</option>
+					<option value="name">A-Z</option>
+					<option value="name-desc">Z-A</option>
+					<option value="balance">Balance (Asc.)</option>
+					<option value="balance-desc">Balance (Desc.)</option>
 				</select>
 			</div>
 		</form>
