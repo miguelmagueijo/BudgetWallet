@@ -28,6 +28,7 @@ class ResWalletCard(BaseModel):
     icon: Optional[str]
     color: Optional[str]
     budgets: list[ResWalletBudgetCard] = []
+    total_money: int = 0
 
 @router.get("/", response_model=list[ResWalletCard])
 async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency):
@@ -78,6 +79,7 @@ async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDepen
                                 color=row_dict["budget_color"],
                                 total=row_dict["budget_total"]
                             ))
+        wallet.total_money += row_dict["budget_total"]
 
     return list(wallets_results.values())
 
