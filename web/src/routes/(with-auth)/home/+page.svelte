@@ -6,6 +6,9 @@
 	import { onMount } from "svelte";
 	import { DataStore } from "$lib/data.svelte";
 	import type { KeyboardEventHandler } from "svelte/elements";
+	import type { PageProps } from "./$types";
+
+	const { data }: PageProps = $props();
 
 	const DEFAULT_WALLET_ICON = "streamline-ultimate:money-wallet-open-bold";
 	const DEFAULT_WALLET_COLOR = "#FFFFFF";
@@ -221,7 +224,7 @@
 </Modal>
 
 <section class="my-10">
-	<h2 class="mb-4 text-5xl font-bold">Hi, Miguel</h2>
+	<h2 class="mb-4 text-5xl font-bold">Hi, <span class="capitalize">{data.user.username}</span></h2>
 	<div class="grid grid-cols-3 gap-8">
 		<div class="info-card border-primary-400 bg-primary-925 text-primary-400">
 			<Icon icon="ph:money-wavy" class="size-18" />

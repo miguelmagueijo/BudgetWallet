@@ -4,8 +4,9 @@
 	import Icon from "@iconify/svelte";
 	import { resolve } from "$app/paths";
 	import { version } from "$app/environment";
+	import type { LayoutProps } from "./$types";
 
-	let { children } = $props();
+	let { data, children }: LayoutProps = $props();
 </script>
 
 <svelte:head>
@@ -23,8 +24,10 @@
 				<div
 					class="flex items-center justify-between gap-4 rounded-lg border-2 border-transparent bg-primary-1000 px-3 py-2 group-hover:rounded-b-none group-hover:border-primary-900 group-hover:border-b-primary-1000"
 				>
-					<b>Miguel</b>
-					<div class="flex size-8 items-center justify-center rounded-full bg-primary-0 text-primary-1000 select-none">M</div>
+					<b class="capitalize">{data.user.username}</b>
+					<div class="flex size-8 items-center justify-center rounded-full bg-primary-0 text-primary-1000 select-none">
+						{data.user.username.charAt(0).toUpperCase()}
+					</div>
 				</div>
 				<div class="absolute top-full right-0 hidden w-[250px] group-hover:block">
 					<div class="text-normal -mt-0.5 rounded-lg rounded-tr-none border-2 border-primary-900 bg-primary-1000 p-4">
@@ -42,10 +45,10 @@
 								<!-- eslint-disable svelte/no-navigation-without-resolve -->
 								<a
 									href="/logout"
-									class="flex items-center justify-between rounded-lg border-2 border-red-600 px-2 py-1 font-semibold text-red-600 duration-300 hover:bg-red-600 hover:text-red-950"
+									class="flex items-center gap-2 rounded-lg px-2 py-1 font-semibold text-red-500 duration-300 hover:bg-red-500 hover:text-red-950"
 								>
-									<span>Logout</span>
 									<Icon icon="ic:round-logout" class="size-5 stroke-2" />
+									<span>Logout</span>
 								</a>
 							</li>
 						</ul>
@@ -85,7 +88,7 @@
 				Developed by
 				<a href="https://miguelmagueijo.pt" class="font-bold underline" target="_blank"> Miguel Magueijo </a>
 			</div>
-			<div>V{version}</div>
+			<i>V{version}</i>
 		</div>
 	</footer>
 </div>
