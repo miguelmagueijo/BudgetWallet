@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from "@iconify/svelte";
-	import WalletCard from "./WalletCard.svelte";
+	import WalletCard, { type CardWalletData } from "./WalletCard.svelte";
 	import Modal from "$lib/components/Modal.svelte";
 	import IconWrapper from "$lib/components/IconWrapper.svelte";
 	import { onMount } from "svelte";
@@ -10,17 +10,7 @@
 	const DEFAULT_WALLET_ICON = "streamline-ultimate:money-wallet-open-bold";
 	const DEFAULT_WALLET_COLOR = "#FFFFFF";
 
-	interface WalletData {
-		id: number;
-		name: string;
-		description: string | null;
-		iconify_name: string | null;
-		color: string | null;
-		user_id: number;
-		start_balance: number;
-	}
-
-	let walletStore: DataStore<WalletData> = new DataStore<WalletData>();
+	let walletStore: DataStore<CardWalletData> = new DataStore<CardWalletData>();
 	let walletsSortValue: string = $state("name");
 	let showAddWalletModal = $state(false);
 
@@ -262,12 +252,9 @@
 				<WalletCard
 					id={wallet.id}
 					title={wallet.name}
-					iconName={wallet.iconify_name ?? DEFAULT_WALLET_ICON}
+					iconName={wallet.icon ?? DEFAULT_WALLET_ICON}
 					color={wallet.color ?? DEFAULT_WALLET_COLOR}
-					budgets={[
-						{ title: "New monitor", money: 291.2 },
-						{ title: "Car fix", money: 523.2 },
-					]}
+					budgets={wallet.budgets}
 				/>
 			{/each}
 		{/if}
