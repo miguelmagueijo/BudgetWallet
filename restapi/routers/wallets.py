@@ -2,7 +2,7 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel, Field
-from sqlmodel import select as sql_select, and_ as sql_and_, func as sql_func, case as sql_case
+from sqlmodel import select as sql_select, and_ as sql_and_, func as sql_func, case as sql_case, literal as sql_literal
 
 from dependencies import DbSessionDependency, AuthedUserDependency
 from db_models import DbWallet, DbBudget, DbMovement
@@ -28,7 +28,7 @@ class ResWalletCard(BaseModel):
     icon: Optional[str]
     color: Optional[str]
     budgets: list[ResWalletBudgetCard] = []
-    total_money: int = 0
+    total_money: float = 0
 
 @router.get("/", response_model=list[ResWalletCard])
 async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency):
@@ -50,7 +50,7 @@ async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDepen
                         else_=-DbMovement.amount
                     )
                 ),
-                0
+                sql_literal(0)
             ).label("budget_total")
         )
         .join(DbBudget, DbWallet.id == DbBudget.wallet_id)
@@ -101,7 +101,7 @@ async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency
 
     db_session.refresh(new_wallet)
 
-    return {"id": new_wallet.id}
+    return {"id": new_wallet.id, "budget_id": new_wallet.budgets[0].id}
 
 
 @router.delete("/delete/{wallet_id}")
