@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import FastAPI, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 import dependencies
 from auth_utils import create_token, authenticate_user
@@ -37,6 +38,14 @@ app.add_middleware(
 ########################################################################################################################
 
 ########################################################################################################################
+# Response classes
+########################################################################################################################
+class ResMeData(BaseModel):
+    id: int
+    username: str
+    is_admin: bool
+
+########################################################################################################################
 # Routes
 ########################################################################################################################
 from routers.wallets import router as wallets_router
@@ -55,3 +64,7 @@ async def login(form_data: Annotated[ReqLogin, Form()], db_session: dependencies
     response.set_cookie(key="bw_token", value=create_token(dependencies.settings, user), path="/", samesite="lax", secure=False, httponly=True)
 
     return response
+
+@app.get("/me")
+async def me(user: dependencies.AuthedUserDependency) -> ResMeData:
+    return ResMeData(**user.model_dump())
