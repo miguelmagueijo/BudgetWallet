@@ -23,7 +23,7 @@
 
 <dialog class="border-primary-800 bg-primary-1000 text-primary-50" closedby="any" onclose={() => (showModal = false)} bind:this={dialogElement}>
 	<div class="flex min-h-full flex-col">
-		<div class="{title ? 'items-center' : 'items-end'} flex justify-between border-b-2 border-primary-900 bg-black p-4 text-2xl font-bold">
+		<div class="{title ? 'items-center' : 'items-end'} flex justify-between border-b-2 border-primary-900 bg-primary-800 p-4 text-2xl font-bold">
 			{#if title}
 				<span>{title}</span>
 			{/if}
