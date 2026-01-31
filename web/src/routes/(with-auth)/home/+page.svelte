@@ -14,6 +14,7 @@
 	let walletStore: DataStore<CardWalletData> = new DataStore<CardWalletData>();
 	let walletsSortValue: string | null = $state(null);
 	let showAddWalletModal = $state(false);
+	let allAccountsMoneyParts: number[] = $state([0, 0]);
 
 	function fetchWallets(ignoreFlag = false) {
 		if (!ignoreFlag && walletStore.loading) {
@@ -32,8 +33,16 @@
 
 				return res.json();
 			})
-			.then((data) => {
+			.then((data: CardWalletData[]) => {
 				walletStore.setData(data);
+
+				let totalMoney: number = 0;
+
+				for (const w of data) {
+					totalMoney += w.total_money;
+				}
+
+				allAccountsMoneyParts = totalMoney.toFixed(2).toString().split(".").map(Number);
 			})
 			.catch((err) => {
 				console.error(err);
@@ -177,7 +186,13 @@
 	<div class="grid grid-cols-3 gap-8">
 		<div class="info-card border-primary-400 bg-primary-925 text-primary-400">
 			<Icon icon="ph:money-wavy" class="size-18" />
-			<div class="text-right text-4xl font-bold text-primary-50">2093<span class="text-lg font-semibold">.23€</span></div>
+			<div class="text-right text-4xl font-bold text-primary-50">
+				{#if walletStore.loading}
+					-- <span class="text-lg font-semibold">€</span>
+				{:else}
+					{allAccountsMoneyParts[0]}<span class="text-lg font-semibold">{allAccountsMoneyParts[1] === 0 ? "" : "." + allAccountsMoneyParts[1]} €</span>
+				{/if}
+			</div>
 
 			<div class="info-card-tooltip">
 				<span class="bg-primary-400 text-primary-950 after:border-b-primary-400"> Total balance </span>
@@ -240,16 +255,32 @@
 				<WalletCard id={-i} title="" iconName="" color="" budgets={[]} totalMoney={-1} />
 			{/each}
 		{:else}
-			{#each walletStore.dataOut as wallet (wallet.id)}
-				<WalletCard
-					id={wallet.id}
-					title={wallet.name}
-					iconName={wallet.icon ?? DEFAULT_WALLET_ICON}
-					color={wallet.color ?? DEFAULT_WALLET_COLOR}
-					budgets={wallet.budgets}
-					totalMoney={wallet.total_money}
-				/>
-			{/each}
+			{#if walletStore.isEmpty()}
+				<div class="flex flex-col justify-center items-center gap-y-2 w-full col-span-4 py-6 bg-primary-950 text-primary-100 border-primary-900 border-3 rounded-lg">
+					<Icon icon="simple-line-icons:drawer" class="stroke-2 size-12"/>
+					<p class="text-xl text-center font-bold">
+						You don't have any wallets
+					</p>
+				</div>
+			{:else if walletStore.isOutEmpty()}
+				<div class="flex flex-col justify-center items-center gap-y-2 w-full col-span-4 py-6 bg-primary-950 text-primary-100 border-primary-900 border-3 rounded-lg">
+					<Icon icon="lucide:search-x" class="stroke-2 size-12"/>
+					<p class="text-xl text-center font-bold">
+						No wallets were found for your search
+					</p>
+				</div>
+			{:else}
+				{#each walletStore.dataOut as wallet (wallet.id)}
+					<WalletCard
+						id={wallet.id}
+						title={wallet.name}
+						iconName={wallet.icon ?? DEFAULT_WALLET_ICON}
+						color={wallet.color ?? DEFAULT_WALLET_COLOR}
+						budgets={wallet.budgets}
+						totalMoney={wallet.total_money}
+					/>
+				{/each}
+			{/if}
 		{/if}
 	</div>
 	<div class="mt-4">
