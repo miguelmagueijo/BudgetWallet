@@ -15,31 +15,30 @@
 	export interface CardWalletBudgetData {
 		id: number;
 		name: string;
-		color: string | null;
+		color?: string;
 		total: number;
 	}
 
 	export interface CardWalletData {
 		id: number;
 		name: string;
-		icon: string | null;
-		color: string | null;
+		icon?: string;
+		color?: string;
 		budgets: Array<CardWalletBudgetData>;
 		total_money: number;
 	}
 
 	let { id, title, iconName, color, budgets, totalMoney }: Props = $props();
 
-	const totalBudgetsStrParts = totalMoney > 0 ? String(totalMoney.toFixed(2)).split(".") : ["0"];
-	const BAR_COLORS = ["#bb3e03", "#ca6702", "#ee9b00", "#e9d8a6", "#94d2bd"];
+	const totalBudgetsStrParts = String(totalMoney.toFixed(2)).split(".").map(Number);
+	const BAR_COLORS = ["#dafbfa", "#7dcecc", "#467876", "#213d3c"];
 	const detailsRouteResolved = resolve(`/wallet/${id}`);
-	let currColorIdx = 0;
 
-	function getBarColor(color: string | null) {
+	function getBarColor(idx: number, color: string | undefined) {
 		if (color) {
 			return color;
 		} else {
-			return BAR_COLORS[currColorIdx++ % BAR_COLORS.length];
+			return BAR_COLORS[idx % BAR_COLORS.length];
 		}
 	}
 </script>
@@ -68,11 +67,11 @@
 			<div class="mt-auto">
 				<div class="my-1 flex gap-1 overflow-hidden rounded-lg">
 					{#if totalMoney > 0}
-						{#each budgets as budget (budget.id)}
+						{#each budgets as budget, idx (budget.id)}
 							<div
 								title={budget.name}
 								class="h-2"
-								style="width: {(budget.total / totalMoney) * 100}%; background-color: {getBarColor(budget.color)}"
+								style="width: {(budget.total / totalMoney) * 100}%; background-color: {getBarColor(idx, budget.color)}"
 							></div>
 						{/each}
 					{/if}
@@ -85,20 +84,19 @@
 						<Icon icon="ic:round-info" class="text-white/50" />
 						<div class="budgets-info-tooltip">
 							<ul>
-								{#each budgets as budget (budget.id)}
+								{#each budgets as budget, idx (budget.id)}
 									<li>
 										<i>{budget.name}</i>
-										<b style="color: {getBarColor(budget.color)};"><b>{budget.total}</b><small>€</small></b>
+										<b style="color: {getBarColor(idx, budget.color)};"><b>{budget.total}</b><small>€</small></b>
 									</li>
 								{/each}
 							</ul>
 						</div>
 					</div>
 					<p class="text-right text-xl">
-						<span class="font-bold" style="color: {color}">{totalBudgetsStrParts[0]}</span>{#if totalBudgetsStrParts.length > 1}<span
+						<span class="font-bold" style="color: {color}">{totalBudgetsStrParts[0]}</span>{#if totalBudgetsStrParts[1] !== 0}<span
 								class="text-sm opacity-75"
-								style="color: {color}">.{totalBudgetsStrParts[1]}</span
-							>{/if}
+								style="color: {color}">.{totalBudgetsStrParts[1]}</span>{/if}
 						<span class="text-sm">€</span>
 					</p>
 				</div>
