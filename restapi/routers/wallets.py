@@ -1,11 +1,11 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel, Field
-from sqlmodel import select as sql_select, and_ as sql_and_
+from sqlmodel import select as sql_select, and_ as sql_and_, func as sql_func, case as sql_case
 
 from dependencies import DbSessionDependency, AuthedUserDependency
-from db_models import DbWallet
+from db_models import DbWallet, DbBudget, DbMovement
 
 router = APIRouter(prefix="/wallets")
 
@@ -16,16 +16,70 @@ class ReqNewWallet(BaseModel):
     iconify_name: str | None = Field(default=None, pattern=r"^[a-z0-9]+(-[a-z0-9]+)*+:[a-z0-9]+(-[a-z0-9]+)*$")
     color: str | None = Field(default=None, pattern=r"^#(?:[0-9a-fA-F]{3}){1,2}$")
 
-@router.get("/")
-async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, order_field: str = "name"):
-    select_stmt = sql_select(DbWallet).where(DbWallet.user == user)
+class ResWalletBudgetCard(BaseModel):
+    id: int
+    name: str
+    color: Optional[str]
+    total: float
 
-    if order_field == "id":
-        select_stmt = select_stmt.order_by(DbWallet.id)
-    else:
-        select_stmt = select_stmt.order_by(DbWallet.name)
+class ResWalletCard(BaseModel):
+    id: int
+    name: str
+    icon: Optional[str]
+    color: Optional[str]
+    budgets: list[ResWalletBudgetCard] = []
 
-    return db_session.exec(select_stmt).all()
+@router.get("/", response_model=list[ResWalletCard])
+async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency):
+    wallets_results: dict[int, ResWalletCard] = {}
+
+    wallets_query = (
+        sql_select(
+            DbWallet.id.label("wallet_id"),
+            DbWallet.name.label("wallet_name"),
+            DbWallet.iconify_name.label("wallet_icon"),
+            DbWallet.color.label("wallet_color"),
+            DbBudget.id.label("budget_id"),
+            DbBudget.name.label("budget_name"),
+            DbBudget.color.label("budget_color"),
+            sql_func.coalesce(
+                sql_func.sum(
+                    sql_case(
+                        (DbMovement.is_deposit, DbMovement.amount),
+                        else_=-DbMovement.amount
+                    )
+                ),
+                0
+            ).label("budget_total")
+        )
+        .join(DbBudget, DbWallet.id == DbBudget.wallet_id)
+        .outerjoin(DbMovement, DbBudget.id == DbMovement.budget_id)
+        .where(DbWallet.user == user)
+        .group_by(DbWallet.id, DbWallet.name, DbBudget.id, DbBudget.name)
+    )
+
+    for row in db_session.exec(wallets_query):
+        row_dict = row._mapping
+
+        wallet = wallets_results.get(row_dict["wallet_id"])
+        if not wallet:
+            wallet = ResWalletCard(
+                id=row_dict["wallet_id"],
+                name=row_dict["wallet_name"],
+                icon=row_dict["wallet_icon"],
+                color=row_dict["wallet_color"],
+                budgets=[]
+            )
+            wallets_results[wallet.id] = wallet
+
+        wallet.budgets.append(ResWalletBudgetCard(
+                                id=row_dict["budget_id"],
+                                name=row_dict["budget_name"],
+                                color=row_dict["budget_color"],
+                                total=row_dict["budget_total"]
+                            ))
+
+    return list(wallets_results.values())
 
 @router.get("/{wallet_id}")
 async def get_single_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
