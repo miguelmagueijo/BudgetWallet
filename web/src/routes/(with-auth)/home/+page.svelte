@@ -52,35 +52,15 @@
 		}
 	};
 
+	const sortFunctions: Record<string, (a: CardWalletData, b: CardWalletData) => number> = {
+		"name": (a, b) => a.name.localeCompare(b.name),
+		"name-desc": (a, b) => b.name.localeCompare(a.name),
+		"balance": (a, b) => a.total_money - b.total_money,
+		"balance-desc": (a, b) => b.total_money - a.total_money,
+	};
+
 	const handleSortWalletChange = () => {
-		switch (walletsSortValue) {
-			case "balance":
-			case "balance-desc":
-				// TODO: implement
-				walletStore.resetSort();
-				break;
-			case "name-desc":
-				walletStore.applySort((a, b) => {
-					if (a.name > b.name) {
-						return -1;
-					} else if (a.name < b.name) {
-						return 1;
-					} else {
-						return 0;
-					}
-				});
-				break;
-			default:
-				walletStore.applySort((a, b) => {
-					if (a.name > b.name) {
-						return 1;
-					} else if (a.name < b.name) {
-						return -1;
-					} else {
-						return 0;
-					}
-				});
-		}
+		return walletStore.applySort(sortFunctions[walletsSortValue] ?? sortFunctions["name"]);
 	};
 
 	let newWalletColor = $state(DEFAULT_WALLET_COLOR);
