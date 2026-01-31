@@ -85,6 +85,45 @@
 	let newWalletName = $state("");
 	let newWalletMoney = $state(0);
 
+	async function handleNewWalletFormSubmit(evt: SubmitEvent) {
+		const formData = new FormData(evt.target as HTMLFormElement);
+
+		try {
+			const result = await fetch("http://localhost:5173/api/wallets/new", {
+				credentials: "include",
+				method: "POST",
+				body: formData
+			});
+
+			if (!result.ok) {
+				throw new Error("Response was not successful");
+			}
+
+			const data = await result.json();
+
+			const newWallet: CardWalletData = {
+				id: data.id,
+				name: newWalletName,
+				budgets: [
+					{
+						id: data.budget_id,
+						name: "Money",
+						total: newWalletMoney,
+					}
+				],
+				icon: newWalletIcon,
+				color: newWalletColor,
+				total_money: newWalletMoney,
+			}
+
+			walletStore.addRecord(newWallet);
+
+			showAddWalletModal = false;
+		} catch (e) {
+			console.error(e);
+		}
+	}
+
 	onMount(async () => {
 		walletsSortValue = localStorage.getItem(STORAGE_WALLET_SORT_KEY);
 		if (!walletsSortValue) {
@@ -97,12 +136,12 @@
 </script>
 
 <Modal bind:showModal={showAddWalletModal} title="New wallet">
-	<form class="max-w-[500px] space-y-2">
+	<form id="new-wallet-form" class="max-w-[500px] space-y-2" onsubmit={handleNewWalletFormSubmit}>
 		<div>
 			<label class="block font-semibold" for="wallet-name"> Name <span class="text-red-500">*</span> </label>
 			<input
 				id="wallet-name"
-				name="walletName"
+				name="name"
 				type="text"
 				class="w-full rounded-lg border-2 border-primary-900 bg-black"
 				bind:value={newWalletName}
@@ -114,7 +153,7 @@
 			<label class="block font-semibold" for="wallet-desc"> Start balance <span class="text-red-500">*</span> </label>
 			<input
 				id="wallet-money"
-				name="walletMoney"
+				name="start_balance"
 				class="w-full rounded-lg border-2 border-primary-900 bg-black"
 				type="number"
 				bind:value={newWalletMoney}
@@ -125,7 +164,7 @@
 			<label class="block font-semibold" for="wallet-desc"> Description </label>
 			<textarea
 				id="wallet-desc"
-				name="walletDesc"
+				name="description"
 				class="max-h-[200px] w-full rounded-lg border-2 border-primary-900 bg-black"
 				maxlength="512"
 				bind:value={newWalletDescription}
@@ -138,10 +177,10 @@
 		<div class="grid grid-cols-3 gap-4">
 			<div class="col-span-2">
 				<div>
-					<label class="block font-semibold" for="wallet-color"> Icon </label>
+					<label class="block font-semibold" for="wallet-color"> Icon color </label>
 					<input
 						id="wallet-color"
-						name="walletColor"
+						name="color"
 						type="color"
 						class="h-11 w-full rounded-lg border-2 border-primary-900 bg-black"
 						bind:value={newWalletColor}
@@ -151,7 +190,7 @@
 					<label class="block font-semibold" for="wallet-color"> Icon </label>
 					<input
 						id="wallet-color"
-						name="walletColor"
+						name="iconify_name"
 						type="text"
 						class="w-full rounded-lg border-2 border-primary-900 bg-black"
 						bind:value={newWalletIcon}
@@ -175,7 +214,7 @@
 	</form>
 	{#snippet footer()}
 		<div class="flex justify-end gap-4">
-			<button type="button" class="primary-button px-4 py-2"> Create wallet </button>
+			<button type="submit" form="new-wallet-form" class="primary-button px-4 py-2"> Create wallet </button>
 			<button class="primary-button-outline px-4 py-2" type="button" onclick={() => (showAddWalletModal = false)}> Cancel </button>
 		</div>
 	{/snippet}
@@ -195,7 +234,7 @@
 			</div>
 
 			<div class="info-card-tooltip">
-				<span class="bg-primary-400 text-primary-950 after:border-b-primary-400"> Total balance </span>
+				<span class="bg-primary-400 text-primary-950 after:border-b-primary-400"> Your total balance </span>
 			</div>
 		</div>
 		<div class="relative flex items-center justify-between rounded-lg bg-primary-400 p-4 text-primary-950">
@@ -216,12 +255,17 @@
 </section>
 
 <section>
-	<div class="flex items-end justify-between">
+	<div class="flex items-end gap-2">
 		<h2 class="text-4xl font-bold">Your wallets</h2>
+		<span class="opacity-50">({walletStore.loading ? "-" : walletStore.getSize()}/10)</span>
 	</div>
 	<div class="my-4">
 		<form class="flex items-center gap-4">
-			<button type="button" class="group cursor-pointer rounded-lg border-2 border-primary-700 bg-black p-3" onclick={() => fetchWallets()}>
+			<button type="button"
+					class="group cursor-pointer rounded-lg border-2 border-primary-700 bg-black p-3 disabled:pointer-events-none disabled:opacity-25"
+					onclick={() => fetchWallets()}
+					disabled="{walletStore.loading}"
+			>
 				<Icon icon="tabler:refresh" class="size-6 duration-300 group-hover:-rotate-180" />
 			</button>
 			<div class="flex w-fit items-center rounded-lg border-2 border-primary-700 bg-black p-1 px-2">
