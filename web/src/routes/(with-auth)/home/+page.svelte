@@ -9,9 +9,10 @@
 
 	const DEFAULT_WALLET_ICON = "streamline-ultimate:money-wallet-open-bold";
 	const DEFAULT_WALLET_COLOR = "#FFFFFF";
+	const STORAGE_WALLET_SORT_KEY = "home:wallet-sort";
 
 	let walletStore: DataStore<CardWalletData> = new DataStore<CardWalletData>();
-	let walletsSortValue: string = $state("name");
+	let walletsSortValue: string | null = $state(null);
 	let showAddWalletModal = $state(false);
 
 	function fetchWallets(ignoreFlag = false) {
@@ -59,7 +60,13 @@
 		"balance-desc": (a, b) => b.total_money - a.total_money,
 	};
 
-	const handleSortWalletChange = () => {
+	function handleSortWalletChange() {
+		if (!walletsSortValue) {
+			return;
+		}
+
+		localStorage.setItem(STORAGE_WALLET_SORT_KEY, walletsSortValue);
+
 		return walletStore.applySort(sortFunctions[walletsSortValue] ?? sortFunctions["name"]);
 	};
 
@@ -70,6 +77,11 @@
 	let newWalletMoney = $state(0);
 
 	onMount(async () => {
+		walletsSortValue = localStorage.getItem(STORAGE_WALLET_SORT_KEY);
+		if (!walletsSortValue) {
+			walletsSortValue = "name";
+		}
+
 		handleSortWalletChange(); // add sort before fetching data
 		fetchWallets(true);
 	});
