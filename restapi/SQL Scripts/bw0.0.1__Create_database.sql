@@ -33,7 +33,7 @@ CREATE TABLE budget (
     description TEXT,
     iconify_name TEXT,
     color VARCHAR(7),
-    is_permanent BOOLEAN DEFAULT FALSE, -- only deletes when wallet is deleted
+    is_permanent BOOLEAN NOT NULL DEFAULT FALSE, -- only deletes when wallet is deleted
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     wallet_id INTEGER NOT NULL,
