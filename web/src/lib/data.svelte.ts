@@ -26,6 +26,22 @@ export class DataStore<T> {
 		this.originalData = data;
 	}
 
+	public addRecord(record: T) {
+		this.originalData.push(record);
+	}
+
+	public isEmpty() {
+		return this.originalData.length === 0;
+	}
+
+	public getSize() {
+		return this.originalData.length;
+	}
+
+	public isOutEmpty() {
+		return this.dataOut.length === 0;
+	}
+
 	public applySort(sortFunction: (a: T, b: T) => number) {
 		this.sortFunction = sortFunction;
 	}
