@@ -245,7 +245,7 @@
 	<div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
 		{#if walletStore.loading}
 			{#each [1, 2, 3, 4] as i (i)}
-				<WalletCard id={-i} title="" iconName="" color="" budgets={[]} />
+				<WalletCard id={-i} title="" iconName="" color="" budgets={[]} totalMoney={-1} />
 			{/each}
 		{:else}
 			{#each walletStore.dataOut as wallet (wallet.id)}
@@ -255,6 +255,7 @@
 					iconName={wallet.icon ?? DEFAULT_WALLET_ICON}
 					color={wallet.color ?? DEFAULT_WALLET_COLOR}
 					budgets={wallet.budgets}
+					totalMoney={wallet.total_money}
 				/>
 			{/each}
 		{/if}

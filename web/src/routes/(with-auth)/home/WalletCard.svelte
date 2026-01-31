@@ -2,11 +2,13 @@
 	import Icon from "@iconify/svelte";
 	import { resolve } from "$app/paths";
 
+	// TODO: try to only require the CardWalletData
 	interface Props {
 		id: number;
 		title: string;
 		iconName: string;
 		color: string;
+		totalMoney: number;
 		budgets: Array<CardWalletBudgetData>;
 	}
 
@@ -20,15 +22,15 @@
 	export interface CardWalletData {
 		id: number;
 		name: string;
-		budgets: Array<CardWalletBudgetData>;
 		icon: string | null;
 		color: string | null;
+		budgets: Array<CardWalletBudgetData>;
+		total_money: number;
 	}
 
-	let { id, title, iconName, color, budgets }: Props = $props();
+	let { id, title, iconName, color, budgets, totalMoney }: Props = $props();
 
-	const totalOfBudgets: number = Number(budgets.reduce((total, b) => total + b.total, 0).toFixed(2));
-	const totalBudgetsStrParts = String(totalOfBudgets).split(".");
+	const totalBudgetsStrParts = totalMoney > 0 ? String(totalMoney.toFixed(2)).split(".") : ["0"];
 	const BAR_COLORS = ["#bb3e03", "#ca6702", "#ee9b00", "#e9d8a6", "#94d2bd"];
 	const detailsRouteResolved = resolve(`/wallet/${id}`);
 	let currColorIdx = 0;
@@ -65,13 +67,15 @@
 			</a>
 			<div class="mt-auto">
 				<div class="my-1 flex gap-1 overflow-hidden rounded-lg">
-					{#each budgets as budget (budget.id)}
-						<div
-							title={budget.name}
-							class="h-2"
-							style="width: {(budget.total / totalOfBudgets) * 100}%; background-color: {getBarColor(budget.color)}"
-						></div>
-					{/each}
+					{#if totalMoney > 0}
+						{#each budgets as budget (budget.id)}
+							<div
+								title={budget.name}
+								class="h-2"
+								style="width: {(budget.total / totalMoney) * 100}%; background-color: {getBarColor(budget.color)}"
+							></div>
+						{/each}
+					{/if}
 				</div>
 				<div class="flex items-center justify-between">
 					<div class="budgets-info">
