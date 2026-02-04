@@ -49,8 +49,10 @@ class ResMeData(BaseModel):
 # Routes
 ########################################################################################################################
 from routers.wallets import router as wallets_router
+from routers.users import router as users_router
 
 app.include_router(wallets_router)
+app.include_router(users_router)
 
 @app.get("/")
 def root():
