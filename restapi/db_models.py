@@ -15,7 +15,7 @@ class BaseDbModel(SQLModel):
 class DbUser(BaseDbModel, table=True):
     __tablename__ = "user_account"
 
-    username: str = Field(nullable=False)
+    username: str = Field(nullable=False, unique=True)
     password: str = Field(nullable=False)
     is_active: bool = Field(nullable=False, default=False)
     is_admin: bool = Field(nullable=False, default=False)
