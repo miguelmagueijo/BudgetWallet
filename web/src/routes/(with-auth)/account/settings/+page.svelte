@@ -7,6 +7,7 @@
 	import { invalidateAll } from "$app/navigation";
 	import { FormErrorHandler } from "$lib/forms.svelte";
 	import RequirementsOfField from "$lib/components/forms/RequirementsOfField.svelte";
+	import { ICONS_NAMES } from "$lib";
 
 	const { data }: PageProps = $props();
 
@@ -23,7 +24,7 @@
 	let currPasswordValue = $state("");
 	let newPasswordValue = $state("");
 	let currConfPasswordValue = $state("");
-	let newUsername = $state(data.user.username);
+	let newUsername: string = $state(data.user.username);
 
 	let canUpdateUsername = $state(true);
 	const usernameFormHandler = new FormErrorHandler();
@@ -86,10 +87,11 @@
 	}
 </script>
 
-<section class="m-auto w-[750px]">
+<section class="mx-auto my-10 w-[750px]">
 	<div class="flex items-center gap-4">
+		<Icon icon={ICONS_NAMES.accountSettings} class="size-10" />
 		<h1 class="text-4xl font-bold">Account settings</h1>
-		<hr class="flex-1 border-2" />
+		<hr class="flex-1 rounded-lg border-2" />
 	</div>
 	<div class="mt-6">
 		<h2 class="mb-4 text-2xl font-semibold">Change username</h2>
@@ -182,7 +184,7 @@
 			class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-red-500 py-1 text-red-500 duration-300 hover:bg-red-500 hover:text-red-950"
 			onclick={() => (showDeleteAccountModal = true)}
 		>
-			<Icon icon="weui:delete-filled" class="size-5" />
+			<Icon icon={ICONS_NAMES.trash} class="size-5" />
 			<span class="font-semibold">Delete account</span>
 		</button>
 		<Modal bind:showModal={showDeleteAccountModal} title="Confirm account deletion">
