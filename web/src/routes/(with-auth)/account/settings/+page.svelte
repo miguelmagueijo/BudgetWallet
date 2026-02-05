@@ -3,7 +3,10 @@
 	import type { PageProps } from "./$types";
 	import Modal from "$lib/components/Modal.svelte";
 	import * as z from "zod";
-	import { USERNAME_REGEX } from "$lib";
+	import { USERNAME_REGEX, PASSWORD_REGEX } from "$lib/forms.svelte";
+	import { invalidateAll } from "$app/navigation";
+	import { FormErrorHandler } from "$lib/forms.svelte";
+	import RequirementsOfField from "$lib/components/forms/RequirementsOfField.svelte";
 
 	const { data }: PageProps = $props();
 
@@ -11,18 +14,8 @@
 
 	const PasswordValidator = z
 		.object({
-			currPassword: z
-				.string()
-				.regex(
-					/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[.,;:#?!@$€%^&+*_|/\\<>-]).{8,}$/,
-					"Current password doesn't match security requirements",
-				),
-			newPassword: z
-				.string()
-				.regex(
-					/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[.,;:#?!@$€%^&+*_|/\\<>-]).{8,}$/,
-					"New password doesn't match security requirements",
-				),
+			currPassword: z.string().regex(PASSWORD_REGEX, "Current password doesn't match security requirements"),
+			newPassword: z.string().regex(PASSWORD_REGEX, "New password doesn't match security requirements"),
 			newConfPassword: z.string(),
 		})
 		.refine((data) => data.newPassword === data.newConfPassword, { message: "Passwords must match", path: ["newConfPassword"] });
@@ -32,9 +25,57 @@
 	let currConfPasswordValue = $state("");
 	let newUsername = $state(data.user.username);
 
-	function handlePasswordUpdateForm() {
+	let canUpdateUsername = $state(true);
+	const usernameFormHandler = new FormErrorHandler();
+
+	async function handleUsernameUpdateForm(evt: SubmitEvent) {
+		evt.preventDefault();
+
+		usernameFormHandler.reset();
+
+		if (!newUsername) {
+			usernameFormHandler.setError("Please enter a username");
+			return;
+		}
+
+		if (!USERNAME_REGEX.test(newUsername)) {
+			usernameFormHandler.setError("New username doesn't meet the requirements");
+			return;
+		}
+
+		try {
+			const formData = new FormData();
+			formData.set("username", newUsername);
+
+			const res = await fetch("/api/user/", {
+				method: "PATCH",
+				body: formData,
+			});
+
+			if (!res.ok) {
+				const errorData = await res.json();
+				usernameFormHandler.setError(errorData.detail);
+				return;
+			}
+
+			canUpdateUsername = false;
+			setTimeout(() => {
+				canUpdateUsername = true;
+				usernameFormHandler.reset();
+			}, 2500);
+			usernameFormHandler.setSuccess("Username updated successfully");
+
+			invalidateAll();
+		} catch (e) {
+			console.error(e);
+		}
+	}
+
+	function handlePasswordUpdateForm(evt: SubmitEvent) {
+		evt.preventDefault();
+
 		const pwValidation = PasswordValidator.safeParse({
-			currentPassword: currPasswordValue,
+			currPassword: currPasswordValue,
 			newPassword: newPasswordValue,
 			newConfPassword: currConfPasswordValue,
 		});
@@ -52,7 +93,7 @@
 	</div>
 	<div class="mt-6">
 		<h2 class="mb-4 text-2xl font-semibold">Change username</h2>
-		<form method="POST" action="?/changeUsername">
+		<form onsubmit={handleUsernameUpdateForm}>
 			<div>
 				<label for="act-username" class="block">Username</label>
 				<input
@@ -63,27 +104,25 @@
 					bind:value={newUsername}
 				/>
 			</div>
-			<small class="opacity-50">Start with a letter, then letters, numbers or underscores, size ranging 3 to 8</small>
-			{#if form?.badUsername}
-				<div class="rounded-lg text-sm text-red-500">Invalid username "{form.badUsername}", it doesn't meet the requirements.</div>
-			{/if}
-			{#if form?.errorMsg}
-				<div class="rounded-lg text-sm text-red-500">{form.errorMsg}</div>
-			{/if}
-			{#if form?.usernameUpdated}
-				<div class="rounded-lg text-sm text-green-500">Username updated with success.</div>
+			<RequirementsOfField
+				requirements={["Start with a letter (A-Z)", "Contain only letters, numbers and underscores (_)", "Length between 3 and 8"]}
+			/>
+			{#if usernameFormHandler.message}
+				<div class="small {usernameFormHandler.isError ? 'text-red-500' : 'text-green-500'}">
+					{usernameFormHandler.message}
+				</div>
 			{/if}
 			<button
 				type="submit"
 				class="primary-button mt-4 w-full py-1"
-				disabled={newUsername === data.user.username || !USERNAME_REGEX.test(newUsername)}
+				disabled={newUsername === data.user.username || !USERNAME_REGEX.test(newUsername) || !canUpdateUsername}
 			>
 				Update username
 			</button>
 		</form>
 		<hr class="my-6 rounded-lg border-2 border-white opacity-15" />
 		<h2 class="mb-4 text-2xl font-semibold">Change password</h2>
-		<form method="POST" onsubmit={handlePasswordUpdateForm} use:enhance>
+		<form onsubmit={handlePasswordUpdateForm}>
 			<div>
 				<label for="act-username" class="block">Current password</label>
 				<input
@@ -91,29 +130,48 @@
 					name="currentPassword"
 					type="password"
 					class=" w-full rounded-lg border-2 border-primary-800 bg-black"
-					value={currPasswordValue}
+					bind:value={currPasswordValue}
 				/>
 			</div>
+			<RequirementsOfField
+				requirements={[
+					"Minimum length of 8",
+					"One or more letter(s) uppercase",
+					"One or more letter(s) lowercase",
+					"One or more number(s)",
+					"One or more special character(s)",
+				]}
+			/>
 			<div class="mt-3">
 				<label for="act-username" class="block">New password</label>
 				<input
 					id="act-new-pw"
 					name="newPassword"
-					type="text"
+					type="password"
 					class=" w-full rounded-lg border-2 border-primary-800 bg-black"
-					value={newPasswordValue}
+					bind:value={newPasswordValue}
 				/>
 			</div>
+			<RequirementsOfField
+				requirements={[
+					"Minimum length of 8",
+					"One or more letter(s) uppercase",
+					"One or more letter(s) lowercase",
+					"One or more number(s)",
+					"One or more special character(s)",
+				]}
+			/>
 			<div class="mt-3">
 				<label for="act-username" class="block">New password confirmation</label>
 				<input
 					id="act-new-pw-confirm"
 					name="newPasswordConfirm"
-					type="text"
+					type="password"
 					class=" w-full rounded-lg border-2 border-primary-800 bg-black"
-					value={currConfPasswordValue}
+					bind:value={currConfPasswordValue}
 				/>
 			</div>
+			<RequirementsOfField requirements={["Match previous password field"]} />
 			<button type="submit" class="primary-button mt-5 w-full py-1">Update password</button>
 		</form>
 	</div>
