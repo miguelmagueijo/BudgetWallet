@@ -18,12 +18,6 @@ class ReqUpdateUser(BaseModel):
     password: str | None = Field(default=None)
     currPassword: str | None = Field(default=None)
 
-@router.patch("/t")
-async def t(request: Request):
-    print(request)
-    print(await request.body())
-    return {"success": True}
-
 @router.patch("/")
 async def update_user(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqUpdateUser, Form()]):
     data_changed = False
@@ -48,7 +42,7 @@ async def update_user(db_session: DbSessionDependency, user: AuthedUserDependenc
     if not data_changed:
         raise HTTPException(status_code=400, detail="Must provide username and/or password")
 
-    #db_session.add(user)
-    #db_session.rollback()
+    db_session.add(user)
+    db_session.commit()
 
     return {"username": user.username}
