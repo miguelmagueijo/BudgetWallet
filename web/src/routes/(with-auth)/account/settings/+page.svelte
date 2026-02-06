@@ -17,7 +17,7 @@
 
 	let currPasswordValue = $state("");
 	let newPasswordValue = $state("");
-	let currConfPasswordValue = $state("");
+	let confNewPasswordValue = $state("");
 	const PasswordValidator = z
 		.object({
 			currPassword: z.string().regex(PASSWORD_REGEX, "Current password doesn't match security requirements"),
@@ -83,17 +83,63 @@
 		}
 	}
 
-	function handlePasswordUpdateForm(evt: SubmitEvent) {
+	async function handlePasswordUpdateForm(evt: SubmitEvent) {
 		evt.preventDefault();
 
 		const pwValidation = PasswordValidator.safeParse({
 			currPassword: currPasswordValue,
 			newPassword: newPasswordValue,
-			newConfPassword: currConfPasswordValue,
+			newConfPassword: confNewPasswordValue,
 		});
 
 		if (!pwValidation.success) {
-			console.log(pwValidation.error);
+			for (const iss of pwValidation.error.issues) {
+				toastStore.push({
+					type: TOAST_TYPE.ERROR,
+					message: iss.message,
+				});
+			}
+			return;
+		}
+
+		if (currPasswordValue === newPasswordValue) {
+			toastStore.push({
+				type: TOAST_TYPE.ERROR,
+				message: "New password is equal to the current one",
+			});
+			return;
+		}
+
+		try {
+			const formData = new FormData();
+			formData.set("password", currPasswordValue);
+			formData.set("newPassword", newPasswordValue);
+
+			const res = await fetch("/api/user/", {
+				method: "PATCH",
+				body: formData,
+			});
+
+			if (!res.ok) {
+				const errorData = await res.json();
+				toastStore.push({
+					message: errorData.detail,
+					type: TOAST_TYPE.ERROR,
+					duration: 5,
+				});
+				return;
+			}
+
+			toastStore.push({
+				message: "Password updated successfully",
+				type: TOAST_TYPE.SUCCESS,
+				duration: 5,
+			});
+
+			currPasswordValue = newPasswordValue = confNewPasswordValue = "";
+		} catch (e) {
+			toastStore.pushServerError();
+			console.error(e);
 		}
 	}
 </script>
@@ -176,15 +222,11 @@
 					name="newPasswordConfirm"
 					type="password"
 					class="w-full rounded-lg border-2 border-primary-800 bg-black"
-					bind:value={currConfPasswordValue}
+					bind:value={confNewPasswordValue}
 				/>
 			</div>
 			<RequirementsOfField requirements={["Match previous password field"]} />
-			<button
-				type="submit"
-				class="primary-button mt-5 w-full py-1"
-				disabled={!currPasswordValue || !newPasswordValue || !currConfPasswordValue}
-			>
+			<button type="submit" class="primary-button mt-5 w-full py-1" disabled={!currPasswordValue || !newPasswordValue || !confNewPasswordValue}>
 				Update password
 			</button>
 		</form>
