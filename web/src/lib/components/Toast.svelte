@@ -24,6 +24,27 @@
 <style lang="postcss">
 	@reference "tailwindcss";
 
+	@keyframes toast-appear {
+		from {
+			opacity: 0;
+			transform: translateX(100%);
+		}
+
+		to {
+			opacity: 100%;
+			transform: translateX(0%);
+		}
+	}
+
+	@keyframes toast-progress-bar {
+		from {
+			width: 0;
+		}
+		to {
+			width: 100%;
+		}
+	}
+
 	.toast-container {
 		@apply gap-y-4 p-6;
 		position: fixed;
@@ -40,6 +61,7 @@
 		align-items: center;
 		display: flex;
 		cursor: pointer;
+		animation: toast-appear 300ms linear forwards;
 	}
 
 	.toast.success {
@@ -73,14 +95,5 @@
 		opacity: 15%;
 		z-index: 5;
 		transform: rotate(180deg);
-	}
-
-	@keyframes toast-progress-bar {
-		from {
-			width: 0;
-		}
-		to {
-			width: 100%;
-		}
 	}
 </style>
