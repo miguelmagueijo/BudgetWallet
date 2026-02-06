@@ -55,4 +55,12 @@ export class ToastStore {
 			duration: 5,
 		});
 	}
+
+	public deleteToast(targetId: number | undefined) {
+		if (typeof targetId !== "number") {
+			return;
+		}
+
+		this.activeToasts.delete(targetId);
+	}
 }

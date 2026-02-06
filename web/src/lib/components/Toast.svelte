@@ -11,7 +11,9 @@
 
 <div class="toast-container">
 	{#each toastStore.activeToasts.values() as toast (toast._jobId)}
-		<div class="toast {toast.type.cssClass}">
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="toast {toast.type.cssClass}" onclick={() => toastStore.deleteToast(toast._jobId)}>
 			<div class="min-w-8">
 				<Icon icon={toast.type.icon} class="size-8" />
 			</div>
