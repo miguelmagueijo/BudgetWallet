@@ -1,11 +1,9 @@
 <script lang="ts">
 	import Icon from "@iconify/svelte";
 	import type { PageProps } from "./$types";
-	import Modal from "$lib/components/Modal.svelte";
 	import * as z from "zod";
 	import { USERNAME_REGEX, PASSWORD_REGEX } from "$lib/forms.svelte";
 	import { invalidateAll } from "$app/navigation";
-	import { FormErrorHandler } from "$lib/forms.svelte";
 	import RequirementsOfField from "$lib/components/forms/RequirementsOfField.svelte";
 	import { ICONS_NAMES } from "$lib";
 	import { getContext } from "svelte";
@@ -13,8 +11,6 @@
 
 	const { data }: PageProps = $props();
 	const toastStore = getContext("toastStore") as ToastStore;
-
-	let showDeleteAccountModal: boolean = $state(false);
 
 	let newUsername: string = $state(data.user.username);
 	let canUpdateUsername = $state(true);
@@ -192,27 +188,5 @@
 				Update password
 			</button>
 		</form>
-	</div>
-	<hr class="mt-10 mb-5 rounded-lg border-2 border-white opacity-15" />
-	<div>
-		<button
-			type="button"
-			class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-red-500 py-1 text-red-500 duration-300 hover:bg-red-500 hover:text-red-950"
-			onclick={() => (showDeleteAccountModal = true)}
-		>
-			<Icon icon={ICONS_NAMES.trash} class="size-5" />
-			<span class="font-semibold">Delete account</span>
-		</button>
-		<Modal bind:showModal={showDeleteAccountModal} title="Confirm account deletion">
-			<div class="max-w-150 font-bold">
-				Do you confirm that all your data will be deleted and it will be impossible to recover it after deleting it?
-			</div>
-			{#snippet footer()}
-				<div class="flex justify-end gap-4">
-					<button type="button" class="primary-button px-4 py-2"> Delete </button>
-					<button class="primary-button-outline px-4 py-2" type="button" onclick={() => (showDeleteAccountModal = false)}> Cancel </button>
-				</div>
-			{/snippet}
-		</Modal>
 	</div>
 </section>
