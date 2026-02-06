@@ -16,7 +16,7 @@ class ReqUpdateUser(BaseModel):
                                  pattern=r"^[a-zA-Z][A-Za-z0-9_]{2,7}$",
                                  description="Username doesn't match the requirements")
     password: str | None = Field(default=None)
-    currPassword: str | None = Field(default=None)
+    newPassword: str | None = Field(default=None)
 
 @router.patch("/")
 async def update_user(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqUpdateUser, Form()]):
@@ -31,11 +31,14 @@ async def update_user(db_session: DbSessionDependency, user: AuthedUserDependenc
         user.username = form_data.username
         data_changed = True
 
-    if form_data.password and form_data.currPassword:
-        if form_data.password != form_data.currPassword:
-            raise HTTPException(status_code=400, detail="Passwords do not match")
+    if form_data.password and form_data.newPassword:
+        if form_data.password == form_data.newPassword:
+            raise HTTPException(status_code=400, detail="New password is equal to the current one")
 
-        user.password = password_hasher.hash(form_data.password)
+        if not password_hasher.verify(form_data.password, user.password):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+        user.password = password_hasher.hash(form_data.newPassword)
         data_changed = True
 
 
