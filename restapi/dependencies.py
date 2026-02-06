@@ -55,7 +55,7 @@ async def get_authenticated_user(db_session: DbSessionDependency, bw_token: Anno
         raise credentials_exception
 
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_423_LOCKED, detail="User is not active")
+        raise HTTPException(status_code=status.HTTP_423_LOCKED, detail="User account is inactive")
 
     return user
 
