@@ -47,6 +47,6 @@ def authenticate_user(username: str, password: str, db_session: Session) -> DbUs
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User for given credentials was not found")
 
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is not active")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is inactive")
 
     return user
