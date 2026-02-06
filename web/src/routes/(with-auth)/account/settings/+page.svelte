@@ -8,8 +8,11 @@
 	import { FormErrorHandler } from "$lib/forms.svelte";
 	import RequirementsOfField from "$lib/components/forms/RequirementsOfField.svelte";
 	import { ICONS_NAMES } from "$lib";
+	import { getContext } from "svelte";
+	import { TOAST_TYPE, type ToastStore } from "$lib/toast.svelte";
 
 	const { data }: PageProps = $props();
+	const toastStore = getContext("toastStore") as ToastStore;
 
 	let showDeleteAccountModal: boolean = $state(false);
 
@@ -60,11 +63,17 @@
 			}
 
 			canUpdateUsername = false;
+
 			setTimeout(() => {
 				canUpdateUsername = true;
 				usernameFormHandler.reset();
 			}, 2500);
-			usernameFormHandler.setSuccess("Username updated successfully");
+
+			toastStore.push({
+				message: "Username updated successfully",
+				type: TOAST_TYPE.SUCCESS,
+				duration: 5,
+			});
 
 			invalidateAll();
 		} catch (e) {
@@ -87,7 +96,7 @@
 	}
 </script>
 
-<section class="mx-auto my-10 w-[750px]">
+<section class="mx-auto my-10 w-180">
 	<div class="flex items-center gap-4">
 		<Icon icon={ICONS_NAMES.accountSettings} class="size-10" />
 		<h1 class="text-4xl font-bold">Account settings</h1>
@@ -188,7 +197,7 @@
 			<span class="font-semibold">Delete account</span>
 		</button>
 		<Modal bind:showModal={showDeleteAccountModal} title="Confirm account deletion">
-			<div class="max-w-[600px] font-bold">
+			<div class="max-w-150 font-bold">
 				Do you confirm that all your data will be deleted and it will be impossible to recover it after deleting it?
 			</div>
 			{#snippet footer()}

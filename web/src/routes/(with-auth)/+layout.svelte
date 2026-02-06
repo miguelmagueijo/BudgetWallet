@@ -6,8 +6,14 @@
 	import { version } from "$app/environment";
 	import type { LayoutProps } from "./$types";
 	import { ICONS_NAMES } from "$lib";
+	import Toast from "$lib/components/Toast.svelte";
+	import { ToastStore } from "$lib/toast.svelte";
+	import { setContext } from "svelte";
 
 	let { data, children }: LayoutProps = $props();
+	const toastStore = new ToastStore();
+
+	setContext("toastStore", toastStore);
 </script>
 
 <svelte:head>
@@ -62,6 +68,8 @@
 	<main class="mb-20 flex-1 p-6">
 		{@render children()}
 	</main>
+
+	<Toast {toastStore} />
 
 	<footer class="mt-auto border-t-2 border-t-white/10 bg-primary-950 p-6">
 		<a href={resolve("/home")} class="flex w-fit items-center gap-2 text-lg font-bold text-[#30EB72]">
