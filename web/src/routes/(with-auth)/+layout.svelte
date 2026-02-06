@@ -86,7 +86,7 @@
 							target="_blank"
 							class="duration-150 hover:scale-125 hover:text-[#30EB72]"
 						>
-							<Icon icon="mingcute:github-fill" class="size-4" />
+							<Icon icon="mingcute:github-fill" class="size-6" />
 						</a>
 					</div>
 				</div>
