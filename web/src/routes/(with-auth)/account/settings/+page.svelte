@@ -184,12 +184,18 @@
 					id="act-new-pw-confirm"
 					name="newPasswordConfirm"
 					type="password"
-					class=" w-full rounded-lg border-2 border-primary-800 bg-black"
+					class="w-full rounded-lg border-2 border-primary-800 bg-black"
 					bind:value={currConfPasswordValue}
 				/>
 			</div>
 			<RequirementsOfField requirements={["Match previous password field"]} />
-			<button type="submit" class="primary-button mt-5 w-full py-1">Update password</button>
+			<button
+				type="submit"
+				class="primary-button mt-5 w-full py-1"
+				disabled={!currPasswordValue || !newPasswordValue || !currConfPasswordValue}
+			>
+				Update password
+			</button>
 		</form>
 	</div>
 	<hr class="mt-10 mb-5 rounded-lg border-2 border-white opacity-15" />
