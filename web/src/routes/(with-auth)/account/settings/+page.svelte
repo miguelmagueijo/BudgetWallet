@@ -38,12 +38,18 @@
 		usernameFormHandler.reset();
 
 		if (!newUsername) {
-			usernameFormHandler.setError("Please enter a username");
+			toastStore.push({
+				type: TOAST_TYPE.ERROR,
+				message: "Please insert a username",
+			});
 			return;
 		}
 
 		if (!USERNAME_REGEX.test(newUsername)) {
-			usernameFormHandler.setError("New username doesn't meet the requirements");
+			toastStore.push({
+				type: TOAST_TYPE.ERROR,
+				message: "New username doesn't meet the requirements",
+			});
 			return;
 		}
 
@@ -58,7 +64,11 @@
 
 			if (!res.ok) {
 				const errorData = await res.json();
-				usernameFormHandler.setError(errorData.detail);
+				toastStore.push({
+					message: errorData.detail,
+					type: TOAST_TYPE.ERROR,
+					duration: 5,
+				});
 				return;
 			}
 
@@ -77,6 +87,7 @@
 
 			invalidateAll();
 		} catch (e) {
+			toastStore.pushServerError();
 			console.error(e);
 		}
 	}
@@ -118,15 +129,10 @@
 			<RequirementsOfField
 				requirements={["Start with a letter (A-Z)", "Contain only letters, numbers and underscores (_)", "Length between 3 and 8"]}
 			/>
-			{#if usernameFormHandler.message}
-				<div class="small {usernameFormHandler.isError ? 'text-red-500' : 'text-green-500'}">
-					{usernameFormHandler.message}
-				</div>
-			{/if}
 			<button
 				type="submit"
 				class="primary-button mt-4 w-full py-1"
-				disabled={newUsername === data.user.username || !USERNAME_REGEX.test(newUsername) || !canUpdateUsername}
+				disabled={newUsername === data.user.username || !newUsername.length || !canUpdateUsername}
 			>
 				Update username
 			</button>
