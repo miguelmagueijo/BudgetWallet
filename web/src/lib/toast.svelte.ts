@@ -21,9 +21,13 @@ export const TOAST_TYPE = {
 } as const;
 
 export interface ToastInfo {
+	/** Internal, do not set this */
 	_jobId?: number;
+	/** Type of the toast */
 	type: (typeof TOAST_TYPE)[keyof typeof TOAST_TYPE];
+	/** Message shown to the user */
 	message: string;
+	/** Duration in seconds */
 	duration?: number;
 }
 
