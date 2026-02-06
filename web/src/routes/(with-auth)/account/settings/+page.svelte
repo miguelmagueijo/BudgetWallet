@@ -16,6 +16,12 @@
 
 	let showDeleteAccountModal: boolean = $state(false);
 
+	let newUsername: string = $state(data.user.username);
+	let canUpdateUsername = $state(true);
+
+	let currPasswordValue = $state("");
+	let newPasswordValue = $state("");
+	let currConfPasswordValue = $state("");
 	const PasswordValidator = z
 		.object({
 			currPassword: z.string().regex(PASSWORD_REGEX, "Current password doesn't match security requirements"),
@@ -24,18 +30,8 @@
 		})
 		.refine((data) => data.newPassword === data.newConfPassword, { message: "Passwords must match", path: ["newConfPassword"] });
 
-	let currPasswordValue = $state("");
-	let newPasswordValue = $state("");
-	let currConfPasswordValue = $state("");
-	let newUsername: string = $state(data.user.username);
-
-	let canUpdateUsername = $state(true);
-	const usernameFormHandler = new FormErrorHandler();
-
 	async function handleUsernameUpdateForm(evt: SubmitEvent) {
 		evt.preventDefault();
-
-		usernameFormHandler.reset();
 
 		if (!newUsername) {
 			toastStore.push({
@@ -76,7 +72,6 @@
 
 			setTimeout(() => {
 				canUpdateUsername = true;
-				usernameFormHandler.reset();
 			}, 2500);
 
 			toastStore.push({
@@ -141,7 +136,7 @@
 		<h2 class="mb-4 text-2xl font-semibold">Change password</h2>
 		<form onsubmit={handlePasswordUpdateForm}>
 			<div>
-				<label for="act-username" class="block">Current password</label>
+				<label for="act-curr-pw" class="block">Current password</label>
 				<input
 					id="act-curr-pw"
 					name="currentPassword"
@@ -160,7 +155,7 @@
 				]}
 			/>
 			<div class="mt-3">
-				<label for="act-username" class="block">New password</label>
+				<label for="act-new-pw" class="block">New password</label>
 				<input
 					id="act-new-pw"
 					name="newPassword"
@@ -179,7 +174,7 @@
 				]}
 			/>
 			<div class="mt-3">
-				<label for="act-username" class="block">New password confirmation</label>
+				<label for="act-new-pw-confirm" class="block">New password confirmation</label>
 				<input
 					id="act-new-pw-confirm"
 					name="newPasswordConfirm"
