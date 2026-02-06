@@ -47,4 +47,12 @@ export class ToastStore {
 
 		this.activeToasts.set(jobID, toastInfo);
 	}
+
+	public pushServerError() {
+		this.push({
+			message: "Something went wrong!",
+			type: TOAST_TYPE.ERROR,
+			duration: 5,
+		});
+	}
 }
