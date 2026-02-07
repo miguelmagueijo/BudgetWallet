@@ -1,4 +1,3 @@
-interface Budget {
-	title: string;
-	money: number;
+export interface GenericError {
+	detail: string;
 }
