@@ -51,10 +51,12 @@ class ResMeData(BaseModel):
 from routers.users import router as users_router
 from routers.wallets import router as wallets_router
 from routers.budgets import router as budgets_router
+from routers.movements import router as movements_router
 
 app.include_router(users_router)
 app.include_router(wallets_router)
 app.include_router(budgets_router)
+app.include_router(movements_router)
 
 @app.get("/")
 def root():
