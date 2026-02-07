@@ -144,6 +144,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>BW | Account settings</title>
+</svelte:head>
+
 <section class="mx-auto my-10 w-180">
 	<div class="flex items-center gap-4">
 		<Icon icon={ICONS_NAMES.accountSettings} class="size-10" />

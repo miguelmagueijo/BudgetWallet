@@ -27,9 +27,9 @@
 				window.location.replace("/home");
 			} else {
 				if (res.status === 400 || res.status === 401) {
-						const resData = await res.json();
+					const resData = await res.json();
 
-						errorMsg = resData.detail;
+					errorMsg = resData.detail;
 				} else {
 					errorMsg = "Something went wrong! Please contact an administrator";
 				}
@@ -43,22 +43,17 @@
 </script>
 
 <svelte:head>
-	<title>Log In into Budget Wallet</title>
+	<title>BW | Login</title>
 </svelte:head>
 
 <div class="flex h-screen items-center justify-center">
 	<div>
 		<div class="mb-12 flex items-center gap-4 text-primary-400">
-			<Icon
-				class="size-14"
-				icon="streamline-ultimate:money-wallet-open-bold"
-			/>
+			<Icon class="size-14" icon="streamline-ultimate:money-wallet-open-bold" />
 			<h1 class="text-center text-6xl font-bold">Budget Wallet</h1>
 		</div>
 		{#if errorMsg}
-			<div
-				class="mb-6 rounded-lg border-2 border-transparent bg-red-200 p-2 text-center font-semibold text-red-800"
-			>
+			<div class="mb-6 rounded-lg border-2 border-transparent bg-red-200 p-2 text-center font-semibold text-red-800">
 				{errorMsg}
 			</div>
 		{/if}
@@ -70,7 +65,7 @@
 					<input
 						id="lf_username"
 						type="text"
-						class="border-2 border-primary-900 bg-black w-full rounded-lg"
+						class="w-full rounded-lg border-2 border-primary-900 bg-black"
 						required
 						class:withErrors={errorMsg}
 						bind:this={usernameElement}
@@ -81,13 +76,13 @@
 					<input
 						id="lf_password"
 						type="password"
-						class="border-2 border-primary-900 bg-black w-full rounded-lg"
+						class="w-full rounded-lg border-2 border-primary-900 bg-black"
 						required
 						class:withErrors={errorMsg}
 						bind:this={passwordElement}
 					/>
 				</div>
-				<button type="submit" class="primary-button w-full flex items-center justify-between py-2 px-4 mt-8" disabled="{isLoading}">
+				<button type="submit" class="primary-button mt-8 flex w-full items-center justify-between px-4 py-2" disabled={isLoading}>
 					{#if isLoading}
 						<span> Logging you in... </span>
 						<Icon icon="gg:spinner" class="size-6 animate-spin" />
@@ -98,27 +93,17 @@
 				</button>
 			</form>
 		</div>
-		<div class="mt-8 text-center opacity-50">
-			To open an account you must contact an administrator
-		</div>
+		<div class="mt-8 text-center opacity-50">To open an account you must contact an administrator</div>
 		<hr class="mx-auto my-4 w-1/3 rounded-full opacity-25" />
 		<div class="opacity-50">
 			<p class="text-center">
 				Developed by
-				<a
-					href="https://miguelmagueijo.pt"
-					target="_blank"
-					class="font-bold underline duration-300 hover:text-primary-400"
-				>
+				<a href="https://miguelmagueijo.pt" target="_blank" class="font-bold underline duration-300 hover:text-primary-400">
 					Miguel Magueijo
 				</a>
 			</p>
 			<div class="mt-2 flex items-center justify-center">
-				<a
-					href="https://github.com/miguelmagueijo/BudgetWallet"
-					target="_blank"
-					class="duration-300 hover:scale-125 hover:text-primary-400"
-				>
+				<a href="https://github.com/miguelmagueijo/BudgetWallet" target="_blank" class="duration-300 hover:scale-125 hover:text-primary-400">
 					<Icon icon="mingcute:github-fill" class="size-6" />
 				</a>
 			</div>

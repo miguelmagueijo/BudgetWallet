@@ -101,6 +101,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>BW | {data.wallet.name}</title>
+</svelte:head>
+
 <a href={resolve("/home")} class="flex w-fit items-center gap-1 border-b text-lg">
 	<Icon icon="lets-icons:back" />
 	<span> Home </span>

@@ -50,6 +50,10 @@
 	];
 </script>
 
+<svelte:head>
+	<title>BW | Roadmap</title>
+</svelte:head>
+
 <section class="mx-auto mt-10 w-180">
 	<h1 class="text-center text-6xl font-bold">Roadmap</h1>
 	<h2 class="text-center text-lg opacity-50">of Budget Wallet</h2>

@@ -138,6 +138,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>BW | Home</title>
+</svelte:head>
+
 <Modal bind:showModal={showAddWalletModal} title="New wallet">
 	<form id="new-wallet-form" class="max-w-125 space-y-2" onsubmit={handleNewWalletFormSubmit}>
 		<div>
