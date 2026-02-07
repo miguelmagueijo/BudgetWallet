@@ -6,4 +6,5 @@ export const ICONS_NAMES = {
 	roundWarning: "fluent:warning-12-filled",
 	roundCheck: "fluent:checkmark-circle-12-filled",
 	roundInfo: "fluent:info-12-filled",
+	pigBank: "fa6-solid:piggy-bank",
 } as const;
