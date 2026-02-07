@@ -5,7 +5,7 @@
 	import IconWrapper from "$lib/components/IconWrapper.svelte";
 	import { onMount } from "svelte";
 	import { DataStore } from "$lib/data.svelte";
-	import type { KeyboardEventHandler } from "svelte/elements";
+	import type { ChangeEventHandler } from "svelte/elements";
 	import type { PageProps } from "./$types";
 
 	const { data }: PageProps = $props();
@@ -14,7 +14,7 @@
 	const DEFAULT_WALLET_COLOR = "#FFFFFF";
 	const STORAGE_WALLET_SORT_KEY = "home:wallet-sort";
 
-	let walletStore: DataStore<CardWalletData> = new DataStore<CardWalletData>();
+	let walletStore: DataStore<CardWalletData> = new DataStore<CardWalletData>(true);
 	let walletsSortValue: string | null = $state(null);
 	let showAddWalletModal = $state(false);
 	let allAccountsMoneyParts: number[] = $state([0, 0]);
@@ -26,7 +26,7 @@
 
 		walletStore.loading = true;
 
-		fetch("http://localhost:5173/api/wallets/", {
+		fetch("/api/wallets/", {
 			credentials: "include",
 		})
 			.then((res) => {
@@ -55,7 +55,7 @@
 			});
 	}
 
-	const handleFilterWalletKeyup: KeyboardEventHandler<HTMLInputElement> = (event) => {
+	const handleFilterWalletOnChange: ChangeEventHandler<HTMLInputElement> = (event) => {
 		const value = event.currentTarget.value;
 
 		if (!value) {
@@ -66,9 +66,9 @@
 	};
 
 	const sortFunctions: Record<string, (a: CardWalletData, b: CardWalletData) => number> = {
-		"name": (a, b) => a.name.localeCompare(b.name),
+		name: (a, b) => a.name.localeCompare(b.name),
 		"name-desc": (a, b) => b.name.localeCompare(a.name),
-		"balance": (a, b) => a.total_money - b.total_money,
+		balance: (a, b) => a.total_money - b.total_money,
 		"balance-desc": (a, b) => b.total_money - a.total_money,
 	};
 
@@ -80,7 +80,7 @@
 		localStorage.setItem(STORAGE_WALLET_SORT_KEY, walletsSortValue);
 
 		return walletStore.applySort(sortFunctions[walletsSortValue] ?? sortFunctions["name"]);
-	};
+	}
 
 	let newWalletColor = $state(DEFAULT_WALLET_COLOR);
 	let newWalletIcon = $state(DEFAULT_WALLET_ICON);
@@ -95,7 +95,7 @@
 			const result = await fetch("http://localhost:5173/api/wallets/new", {
 				credentials: "include",
 				method: "POST",
-				body: formData
+				body: formData,
 			});
 
 			if (!result.ok) {
@@ -112,12 +112,12 @@
 						id: data.budget_id,
 						name: "Money",
 						total: newWalletMoney,
-					}
+					},
 				],
 				icon: newWalletIcon,
 				color: newWalletColor,
 				total_money: newWalletMoney,
-			}
+			};
 
 			walletStore.addRecord(newWallet);
 
@@ -139,7 +139,7 @@
 </script>
 
 <Modal bind:showModal={showAddWalletModal} title="New wallet">
-	<form id="new-wallet-form" class="max-w-[500px] space-y-2" onsubmit={handleNewWalletFormSubmit}>
+	<form id="new-wallet-form" class="max-w-125 space-y-2" onsubmit={handleNewWalletFormSubmit}>
 		<div>
 			<label class="block font-semibold" for="wallet-name"> Name <span class="text-red-500">*</span> </label>
 			<input
@@ -168,7 +168,7 @@
 			<textarea
 				id="wallet-desc"
 				name="description"
-				class="max-h-[200px] w-full rounded-lg border-2 border-primary-900 bg-black"
+				class="max-h-50 w-full rounded-lg border-2 border-primary-900 bg-black"
 				maxlength="512"
 				bind:value={newWalletDescription}
 			></textarea>
@@ -232,7 +232,9 @@
 				{#if walletStore.loading}
 					-- <span class="text-lg font-semibold">€</span>
 				{:else}
-					{allAccountsMoneyParts[0]}<span class="text-lg font-semibold">{allAccountsMoneyParts[1] === 0 ? "" : "." + allAccountsMoneyParts[1]} €</span>
+					{allAccountsMoneyParts[0]}<span class="text-lg font-semibold"
+						>{allAccountsMoneyParts[1] === 0 ? "" : "." + allAccountsMoneyParts[1]} €</span
+					>
 				{/if}
 			</div>
 
@@ -264,10 +266,11 @@
 	</div>
 	<div class="my-4">
 		<form class="flex items-center gap-4">
-			<button type="button"
-					class="group cursor-pointer rounded-lg border-2 border-primary-700 bg-black p-3 disabled:pointer-events-none disabled:opacity-25"
-					onclick={() => fetchWallets()}
-					disabled="{walletStore.loading}"
+			<button
+				type="button"
+				class="group cursor-pointer rounded-lg border-2 border-primary-700 bg-black p-3 disabled:pointer-events-none disabled:opacity-25"
+				onclick={() => fetchWallets()}
+				disabled={walletStore.loading}
 			>
 				<Icon icon="tabler:refresh" class="size-6 duration-300 group-hover:-rotate-180" />
 			</button>
@@ -275,8 +278,8 @@
 				<Icon icon="ic:baseline-search" class="size-6 text-primary-700" />
 				<input
 					type="text"
-					class="w-[450px] rounded-lg border-0 bg-transparent text-white focus:ring-0"
-					onkeyup={handleFilterWalletKeyup}
+					class="w-100 rounded-lg border-0 bg-transparent text-white focus:ring-0"
+					onchange={handleFilterWalletOnChange}
 					placeholder="Filter by name"
 				/>
 			</div>
@@ -301,33 +304,31 @@
 			{#each [1, 2, 3, 4] as i (i)}
 				<WalletCard id={-i} title="" iconName="" color="" budgets={[]} totalMoney={-1} />
 			{/each}
+		{:else if walletStore.isEmpty()}
+			<div
+				class="col-span-4 flex w-full flex-col items-center justify-center gap-y-2 rounded-lg border-3 border-primary-900 bg-primary-950 py-6 text-primary-100"
+			>
+				<Icon icon="simple-line-icons:drawer" class="size-12 stroke-2" />
+				<p class="text-center text-xl font-bold">You don't have any wallets</p>
+			</div>
+		{:else if walletStore.isOutEmpty()}
+			<div
+				class="col-span-4 flex w-full flex-col items-center justify-center gap-y-2 rounded-lg border-3 border-primary-900 bg-primary-950 py-6 text-primary-100"
+			>
+				<Icon icon="lucide:search-x" class="size-12 stroke-2" />
+				<p class="text-center text-xl font-bold">No wallets were found for your search</p>
+			</div>
 		{:else}
-			{#if walletStore.isEmpty()}
-				<div class="flex flex-col justify-center items-center gap-y-2 w-full col-span-4 py-6 bg-primary-950 text-primary-100 border-primary-900 border-3 rounded-lg">
-					<Icon icon="simple-line-icons:drawer" class="stroke-2 size-12"/>
-					<p class="text-xl text-center font-bold">
-						You don't have any wallets
-					</p>
-				</div>
-			{:else if walletStore.isOutEmpty()}
-				<div class="flex flex-col justify-center items-center gap-y-2 w-full col-span-4 py-6 bg-primary-950 text-primary-100 border-primary-900 border-3 rounded-lg">
-					<Icon icon="lucide:search-x" class="stroke-2 size-12"/>
-					<p class="text-xl text-center font-bold">
-						No wallets were found for your search
-					</p>
-				</div>
-			{:else}
-				{#each walletStore.dataOut as wallet (wallet.id)}
-					<WalletCard
-						id={wallet.id}
-						title={wallet.name}
-						iconName={wallet.icon ?? DEFAULT_WALLET_ICON}
-						color={wallet.color ?? DEFAULT_WALLET_COLOR}
-						budgets={wallet.budgets}
-						totalMoney={wallet.total_money}
-					/>
-				{/each}
-			{/if}
+			{#each walletStore.dataOut as wallet (wallet.id)}
+				<WalletCard
+					id={wallet.id}
+					title={wallet.name}
+					iconName={wallet.icon ?? DEFAULT_WALLET_ICON}
+					color={wallet.color ?? DEFAULT_WALLET_COLOR}
+					budgets={wallet.budgets}
+					totalMoney={wallet.total_money}
+				/>
+			{/each}
 		{/if}
 	</div>
 	<div class="mt-4">
