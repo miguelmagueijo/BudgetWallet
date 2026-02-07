@@ -22,6 +22,10 @@ export class DataStore<T> {
 		return output;
 	});
 
+	constructor(isLoading: boolean) {
+		this.loading = isLoading;
+	}
+
 	public setData(data: Array<T>) {
 		this.originalData = data;
 	}
