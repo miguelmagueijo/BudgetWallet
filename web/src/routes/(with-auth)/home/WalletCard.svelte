@@ -58,7 +58,7 @@
 	{/if}
 	<div class="flex-1">
 		{#if id < 0}
-			<div class="h-[24px] w-full rounded-lg bg-primary-900"></div>
+			<div class="h-6 w-full rounded-lg bg-primary-900"></div>
 			<div class="mt-2 h-12 w-full rounded-lg bg-primary-900"></div>
 		{:else}
 			<a href={detailsRouteResolved} class="hover:underline">
@@ -96,7 +96,8 @@
 					<p class="text-right text-xl">
 						<span class="font-bold" style="color: {color}">{totalBudgetsStrParts[0]}</span>{#if totalBudgetsStrParts[1] !== 0}<span
 								class="text-sm opacity-75"
-								style="color: {color}">.{totalBudgetsStrParts[1]}</span>{/if}
+								style="color: {color}">.{totalBudgetsStrParts[1]}</span
+							>{/if}
 						<span class="text-sm">€</span>
 					</p>
 				</div>
