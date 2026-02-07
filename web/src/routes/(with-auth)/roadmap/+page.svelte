@@ -24,6 +24,10 @@
 			features: ["Responsiveness", "PWA version", "Allow user registration by invites", "Publish on LinkedIn"],
 		},
 		{
+			version: "0.3.5",
+			features: ["Feature request", "Bug report"],
+		},
+		{
 			version: "0.4",
 			features: ["Money splitter", "Monthly/Yearly Subscriptions"],
 		},
@@ -68,7 +72,9 @@
 							? 'bg-white'
 							: 'bg-primary-900'}"
 					></div>
-					<h3 class="{isLeft ? '' : 'text-right'} text-xl font-bold italic">Version {item.version}.x</h3>
+					<h3 class="{isLeft ? '' : 'text-right'} text-xl font-bold italic">
+						Version {item.version}{item.version.split(".").length < 3 ? ".X" : ""}
+					</h3>
 				</div>
 				<div class="mt-4 rounded-lg bg-primary-910 p-4">
 					<ul class="list-disc space-y-2 pl-4">
