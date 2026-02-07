@@ -51,7 +51,7 @@
 	<h2 class="text-center text-lg opacity-50">of Budget Wallet</h2>
 	<div class="mt-8 flex items-center justify-center gap-2">
 		<div class="size-4 rounded-full bg-white"></div>
-		<p>Current version</p>
+		<i class="opacity-75">Current version</i>
 	</div>
 	<div class="relative mt-4 grid grid-flow-row grid-cols-2 gap-x-24 gap-y-10 pt-12 pb-32">
 		<div class="absolute top-0 left-1/2 h-full w-4 -translate-x-1/2 rounded-lg bg-primary-900"></div>
