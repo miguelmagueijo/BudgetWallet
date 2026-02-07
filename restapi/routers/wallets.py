@@ -115,6 +115,33 @@ async def get_single_wallet(db_session: DbSessionDependency, user: AuthedUserDep
 
     return result._mapping
 
+@router.get("/{wallet_id}/budgets")
+async def get_all_of_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
+    query_budgets = (
+        sql_select(
+            DbBudget.id,
+            DbBudget.name,
+            DbBudget.iconify_name,
+            DbBudget.color,
+            DbBudget.is_permanent,
+            sql_func.coalesce(
+                sql_func.sum(
+                    sql_case((DbMovement.is_deposit, DbMovement.amount), else_=-DbMovement.amount)
+                ),
+                sql_literal(0)
+            ).label("budget_total")
+        )
+        .join_from(DbBudget, DbWallet).outerjoin_from(DbBudget, DbMovement)
+        .where(sql_and_(DbBudget.wallet_id == wallet_id, DbWallet.user_id == user.id))
+        .group_by(DbBudget.id, DbBudget.name)
+    )
+
+    budgets_data = []
+    for row in db_session.exec(query_budgets):
+        budgets_data.append(row._mapping)
+
+    return budgets_data
+
 @router.get("/{wallet_id}/movements")
 async def get_all_of_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int, budget_id: int = None):
     filters = [DbWallet.id == wallet_id, DbWallet.user_id == user.id]
