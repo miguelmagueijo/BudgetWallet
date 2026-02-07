@@ -115,6 +115,21 @@ async def get_single_wallet(db_session: DbSessionDependency, user: AuthedUserDep
 
     return result._mapping
 
+@router.get("/{wallet_id}/movements")
+async def get_all_of_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int, budget_id: int = None):
+    filters = [DbWallet.id == wallet_id, DbWallet.user_id == user.id]
+
+    if budget_id is not None:
+        filters.append(DbBudget.id == budget_id)
+
+    query_movements = (
+        sql_select(DbMovement)
+        .join_from(DbMovement, DbBudget).join_from(DbBudget, DbWallet)
+        .where(sql_and_(*filters))
+    )
+
+    return db_session.exec(query_movements).all()
+
 @router.post("/new")
 async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqNewWallet, Form()]):
     new_wallet = DbWallet(user=user, **form_data.model_dump())
