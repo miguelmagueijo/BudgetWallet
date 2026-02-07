@@ -5,7 +5,7 @@ export interface SessionUserData {
 }
 
 export async function load({ fetch }) {
-	const user: SessionUserData = await (await fetch("http://localhost:5173/api/me")).json();
+	const user: SessionUserData = await (await fetch("/api/me")).json();
 
 	return {
 		user,
