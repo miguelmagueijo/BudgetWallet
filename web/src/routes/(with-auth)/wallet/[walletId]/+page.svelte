@@ -1,6 +1,19 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import Icon from "@iconify/svelte";
+	import { DataStore } from "$lib/data.svelte";
+	import { onMount } from "svelte";
+	import { ICONS_NAMES } from "$lib";
+	import type { ChangeEventHandler } from "svelte/elements";
+
+	interface IBudgetSimpleInfo {
+		id: string;
+		name: string;
+		iconify_name: string;
+		color: string;
+		is_permanent: boolean;
+		budget_total: number;
+	}
 
 	const movementData = [
 		{
@@ -40,83 +53,140 @@
 			date: "29/01/2025",
 		},
 	];
+
+	const { data } = $props();
+
+	let budgetsStore = new DataStore<IBudgetSimpleInfo>(true);
+
+	function fetchBudgets(ignoreLoadingFlag: boolean = false) {
+		if (!ignoreLoadingFlag && budgetsStore.loading) {
+			return;
+		}
+
+		budgetsStore.loading = true;
+
+		fetch(`/api/budgets/${data.wallet.id}`, {
+			credentials: "include",
+		})
+			.then(async (res) => {
+				return [!res.ok, await res.json()];
+			})
+			.then(([isError, budgets]) => {
+				if (isError) {
+					console.log(budgets.detail);
+				} else {
+					budgetsStore.setData(budgets);
+				}
+			})
+			.catch((err) => {
+				console.log(err);
+			})
+			.finally(() => {
+				budgetsStore.loading = false;
+			});
+	}
+
+	const handleFilterBudgetNameOnChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+		const value = event.currentTarget.value;
+
+		if (!value) {
+			budgetsStore.resetFilter();
+		} else {
+			budgetsStore.applyFilter((element) => element.name.toLowerCase().includes(value.toLowerCase()));
+		}
+	};
+
+	onMount(() => {
+		fetchBudgets(true);
+	});
 </script>
 
-<a href={resolve("/home")} class="flex w-fit items-center gap-1 border-b-1 text-lg">
+<a href={resolve("/home")} class="flex w-fit items-center gap-1 border-b text-lg">
 	<Icon icon="lets-icons:back" />
 	<span> Home </span>
 </a>
 
 <section class="mt-12">
 	<div class="flex items-center gap-4">
-		<Icon icon="arcticons:trading-212" class="size-16 stroke-2 text-[#00a1d9]" />
-		<h1 class="text-5xl font-bold">Trading 212</h1>
-		<hr class="flex-1 rounded-full border-4 border-[#00a1d9]" />
+		<span style:color={data.wallet.color}>
+			<Icon icon={data.wallet.iconify_name} class="size-16 stroke-2" />
+		</span>
+		<h1 class="text-5xl font-bold">{data.wallet.name}</h1>
+		<hr class="flex-1 rounded-full border-4" style:border-color={data.wallet.color} />
 	</div>
 	<div class="my-10 grid grid-cols-4">
-		<div class="flex items-center justify-between rounded-lg border-2 border-[#00a1d9] bg-black p-4">
-			<Icon icon="ph:money-wavy" class="size-12" />
-			<span class="text-2xl font-bold"> 2392.23€ </span>
+		<div class="flex items-center justify-between rounded-lg border-2 bg-black p-4" style:border-color={data.wallet.color}>
+			<span style:color={data.wallet.color}>
+				<Icon icon="ph:money-wavy" class="size-12" />
+			</span>
+			<span class="text-2xl font-bold"> {data.wallet.wallet_total}€ </span>
 		</div>
 	</div>
 	<div class="grid grid-cols-3 gap-10">
 		<div>
 			<h2 class="text-4xl font-semibold">Budgets</h2>
-			<hr class="my-2 rounded-full border-2 border-[#00a1d9]" />
+			<hr class="my-2 rounded-full border-2" style:border-color={data.wallet.color} />
 			<form class="my-3 flex gap-10">
-				<input type="text" class="flex-1 rounded-lg border-2 border-[#00a1d9] bg-black text-primary-50" placeholder="Filter by name" />
+				<input
+					type="text"
+					class="flex-1 rounded-lg border-2 bg-black text-primary-50"
+					placeholder="Filter by name"
+					style:border-color={data.wallet.color}
+					onchange={handleFilterBudgetNameOnChange}
+				/>
 				<div class="flex items-center gap-2">
 					<p>Order by:</p>
-					<select class="w-fit rounded-lg border-2 border-[#00a1d9] bg-black">
+					<select class="w-fit rounded-lg border-2 bg-black" style:border-color={data.wallet.color}>
 						<option> Date </option>
 						<option> Total </option>
 					</select>
 				</div>
 			</form>
 			<div class="space-y-4">
-				<div class="flex items-center gap-4 rounded-lg border-2 border-white p-4">
-					<div>
-						<Icon icon="fa6-solid:piggy-bank" class="size-10" />
-					</div>
-					<div class="flex-1 text-xl font-semibold">Money</div>
-					<div class="w-[175px] text-right">
-						<span class="text-2xl font-bold">9283.83</span><span class="text-base">€</span>
-					</div>
-				</div>
-				<div class="flex items-center gap-4 rounded-lg border-2 border-white p-4">
-					<div>
-						<Icon icon="ic:round-laptop" class="size-10" />
-					</div>
-					<div class="flex-1 text-xl font-semibold">New laptop</div>
-					<div class="w-[100px] text-right">
-						<span class="text-2xl font-bold">800</span><span class="text-base">€</span>
-					</div>
-				</div>
-				<div class="flex items-center gap-4 rounded-lg border-2 border-white p-4">
-					<div>
-						<Icon icon="simple-icons:steamdeck" class="size-10" />
-					</div>
-					<div class="flex-1 text-xl font-semibold">Steam Deck</div>
-					<div class="w-[100px] text-right">
-						<span class="text-2xl font-bold">200</span><span class="text-base">€</span>
-					</div>
-				</div>
+				{#if budgetsStore.loading}
+					{#each [1, 2, 3] as i (i)}
+						<div class="flex animate-pulse items-center gap-4 rounded-lg border-2 p-4" style:border-color={data.wallet.color}>
+							<div class="size-10 rounded-xl" style:background-color={data.wallet.color}></div>
+							<div class="h-9 flex-1 rounded-lg" style:background-color={data.wallet.color}></div>
+							<div class="h-9 w-25 rounded-lg" style:background-color={data.wallet.color}></div>
+						</div>
+					{/each}
+				{:else}
+					{#each budgetsStore.dataOut as budget (budget.id)}
+						<div class="flex items-center gap-4 rounded-lg border-2 p-4">
+							<div>
+								<Icon icon={budget.iconify_name ?? ICONS_NAMES.pigBank} class="size-10" />
+							</div>
+							<div class="flex-1 text-xl font-semibold">{budget.name}</div>
+							<div class="w-25 text-right">
+								<span class="text-2xl font-bold">{budget.budget_total}</span><span class="text-base">€</span>
+							</div>
+						</div>
+					{/each}
+				{/if}
 			</div>
-			<div class="mt-4 border-t-2 border-white/25">
-				<div class="flex items-center justify-between px-4 py-1">
-					<span>Total</span>
-					<span><b>1308.83</b><small>€</small></span>
+			{#if !budgetsStore.loading}
+				<div class="mt-4 border-t-2 border-white/25">
+					<div class="flex items-center justify-between px-4 py-1">
+						<span>Total</span>
+						<span><b>{budgetsStore.dataOut.reduce((acc, record) => acc + record.budget_total, 0)}</b><small>€</small></span>
+					</div>
 				</div>
-			</div>
+			{/if}
 		</div>
 		<div class="col-span-2">
 			<h2 class="text-3xl font-semibold">Movements</h2>
-			<hr class="my-2 rounded-full border-2 border-[#00a1d9]" />
+			<hr class="my-2 rounded-full border-2" style:border-color={data.wallet.color} />
 			<form class="my-3 flex gap-10">
-				<input type="text" class="flex-1 rounded-lg border-2 border-[#00a1d9] bg-black text-primary-50" placeholder="Filter by name" />
+				<input
+					type="text"
+					class="flex-1 rounded-lg border-2 bg-black text-primary-50"
+					placeholder="Filter by name"
+					style:border-color={data.wallet.color}
+				/>
 				<div class="flex items-center gap-2">
 					<p>Order by:</p>
-					<select class="w-fit rounded-lg border-2 border-[#00a1d9] bg-black">
+					<select class="w-fit rounded-lg border-2 bg-black" style:border-color={data.wallet.color}>
 						<option> Date </option>
 						<option> Amount </option>
 						<option> Budget </option>
