@@ -85,12 +85,35 @@ async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDepen
 
 @router.get("/{wallet_id}")
 async def get_single_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
-    wallet = db_session.exec(sql_select(DbWallet).where(sql_and_(DbWallet.id == wallet_id, DbWallet.user == user))).first()
+    wallet_query = (
+        sql_select(
+            DbWallet.id,
+            DbWallet.name,
+            DbWallet.description,
+            DbWallet.iconify_name,
+            DbWallet.color,
+            sql_func.coalesce(
+                sql_func.sum(
+                    sql_case(
+                        (DbMovement.is_deposit, DbMovement.amount),
+                        else_=-DbMovement.amount
+                    )
+                ),
+                sql_literal(0)
+            ).label("wallet_total")
+        )
+        .join_from(DbWallet, DbBudget)
+        .outerjoin_from(DbBudget, DbMovement)
+        .where(sql_and_(DbWallet.user == user, DbWallet.id == wallet_id))
+        .group_by(DbWallet)
+    )
 
-    if not wallet:
+    result = db_session.exec(wallet_query).first()
+
+    if not result:
         raise HTTPException(status_code=404, detail="Wallet not found")
 
-    return wallet
+    return result._mapping
 
 @router.post("/new")
 async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqNewWallet, Form()]):
