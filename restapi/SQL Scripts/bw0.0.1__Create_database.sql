@@ -55,7 +55,7 @@ CREATE TABLE movement (
     amount REAL NOT NULL,
     is_deposit BOOLEAN NOT NULL, -- if TRUE is money IN if FALSE is money OUT
     is_manual BOOLEAN NOT NULL, -- if TRUE means that is a management type movement (fix the actual balance)
-    done_at TIMESTAMP,
+    done_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     budget_id INTEGER NOT NULL,
@@ -78,7 +78,7 @@ BEGIN
 
    IF NEW.start_balance <> 0 THEN
        INSERT INTO movement (title, description, amount, is_deposit, is_manual, done_at, budget_id, category_id)
-       VALUES ('Start balance (automatic)',
+       VALUES ('Start balance',
                'This movement represents a movement which is the start money',
                NEW.start_balance,
                true,
