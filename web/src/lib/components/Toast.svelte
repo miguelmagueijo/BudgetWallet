@@ -6,10 +6,21 @@
 		toastStore: ToastStore;
 	}
 
+	let toatContainer: HTMLDivElement;
 	let { toastStore = $bindable() }: Props = $props();
+
+	$effect(() => {
+		if (toastStore.activeToasts.size > 0) {
+			// since other modals might be open after the toast open, we close and open again to force it to the top
+			toatContainer.hidePopover();
+			toatContainer.showPopover();
+		} else {
+			toatContainer.hidePopover();
+		}
+	});
 </script>
 
-<div class="toast-container">
+<div class="toast-container" bind:this={toatContainer} popover="manual">
 	{#each toastStore.activeToasts.values() as toast (toast._jobId)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -49,12 +60,12 @@
 
 	.toast-container {
 		@apply gap-y-4 p-6;
-		position: fixed;
 		display: grid;
-		bottom: 0;
-		right: 0;
-		z-index: 100;
+		left: 100%;
+		top: 100%;
+		transform: translate(-100%, -100%);
 		background-color: transparent;
+		overflow-x: hidden;
 	}
 
 	.toast {
