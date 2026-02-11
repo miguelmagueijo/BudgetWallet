@@ -6,21 +6,21 @@
 		toastStore: ToastStore;
 	}
 
-	let toatContainer: HTMLDivElement;
+	let toastContainerEl: HTMLDialogElement;
 	let { toastStore = $bindable() }: Props = $props();
 
 	$effect(() => {
 		if (toastStore.activeToasts.size > 0) {
 			// since other modals might be open after the toast open, we close and open again to force it to the top
-			toatContainer.hidePopover();
-			toatContainer.showPopover();
+			toastContainerEl.close();
+			toastContainerEl.show();
 		} else {
-			toatContainer.hidePopover();
+			toastContainerEl.close();
 		}
 	});
 </script>
 
-<div class="toast-container" bind:this={toatContainer} popover="manual">
+<dialog class="toast-container" closedby="closerequest" bind:this={toastContainerEl}>
 	{#each toastStore.activeToasts.values() as toast (toast._jobId)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -32,7 +32,7 @@
 			<div class="toast-progress" style="animation-duration: {toast.duration}s"></div>
 		</div>
 	{/each}
-</div>
+</dialog>
 
 <style lang="postcss">
 	@reference "tailwindcss";
@@ -66,6 +66,7 @@
 		transform: translate(-100%, -100%);
 		background-color: transparent;
 		overflow-x: hidden;
+		z-index: 1000;
 	}
 
 	.toast {
