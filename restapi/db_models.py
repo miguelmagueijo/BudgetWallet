@@ -55,6 +55,8 @@ class DbMovement(BaseDbModel, table=True):
     title: str = Field(nullable=False)
     amount: float = Field(nullable=False)
     is_deposit: bool = Field(nullable=False)
+    is_manual: bool = Field(nullable=False)
+    done_at: datetime = Field(nullable=False, default_factory=lambda: datetime.now(DATETIME_UTC))
 
     budget_id: int = Field(nullable=False, foreign_key="budget.id")
     budget: DbBudget = Relationship(back_populates="movements")
