@@ -1,5 +1,8 @@
 export const USERNAME_REGEX = /^[a-zA-Z][A-Za-z0-9_]{2,7}$/;
+export const BUDGET_NAME_REGEX = /^[a-zA-Z][A-Za-z0-9_ -]{1,30}[A-Za-z0-9_]$/;
 export const PASSWORD_REGEX = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[.,;:#?!@$€%^&+*_|/\\<>-]).{8,}$/;
+export const ICONIFY_ICON_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*:[a-z0-9]+(-[a-z0-9]+)*$/;
+export const HEX_COLOR_REGEX = /^#(?:[0-9a-fA-F]{3}){1,2}$/;
 
 export class FormErrorHandler {
 	private _isError: boolean = $state(false);
