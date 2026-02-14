@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, Cookie, HTTPException, status
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import create_engine, Select
+from sqlalchemy import create_engine
 from sqlmodel import Session, select as sql_select
 from jwt import decode as jwt_decode
 
