@@ -7,4 +7,9 @@ export const ICONS_NAMES = {
 	roundCheck: "fluent:checkmark-circle-12-filled",
 	roundInfo: "fluent:info-12-filled",
 	pigBank: "fa6-solid:piggy-bank",
+	badSearch: "lucide:search-x",
+	emptyData: "simple-line-icons:drawer",
+	dash: "pajamas:dash",
+	arrowUp: "gravity-ui:arrow-up",
+	arrowDown: "gravity-ui:arrow-down",
 } as const;

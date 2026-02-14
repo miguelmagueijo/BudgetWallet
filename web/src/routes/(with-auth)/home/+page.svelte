@@ -7,6 +7,7 @@
 	import { DataStore } from "$lib/data.svelte";
 	import type { ChangeEventHandler } from "svelte/elements";
 	import type { PageProps } from "./$types";
+	import { ICONS_NAMES } from "$lib";
 
 	const { data }: PageProps = $props();
 
@@ -92,7 +93,7 @@
 		const formData = new FormData(evt.target as HTMLFormElement);
 
 		try {
-			const result = await fetch("http://localhost:5173/api/wallets/new", {
+			const result = await fetch("/api/wallets/new", {
 				credentials: "include",
 				method: "POST",
 				body: formData,
@@ -312,14 +313,14 @@
 			<div
 				class="col-span-4 flex w-full flex-col items-center justify-center gap-y-2 rounded-lg border-3 border-primary-900 bg-primary-950 py-6 text-primary-100"
 			>
-				<Icon icon="simple-line-icons:drawer" class="size-12 stroke-2" />
+				<Icon icon={ICONS_NAMES.emptyData} class="size-12 stroke-2" />
 				<p class="text-center text-xl font-bold">You don't have any wallets</p>
 			</div>
 		{:else if walletStore.isOutEmpty()}
 			<div
 				class="col-span-4 flex w-full flex-col items-center justify-center gap-y-2 rounded-lg border-3 border-primary-900 bg-primary-950 py-6 text-primary-100"
 			>
-				<Icon icon="lucide:search-x" class="size-12 stroke-2" />
+				<Icon icon={ICONS_NAMES.badSearch} class="size-12 stroke-2" />
 				<p class="text-center text-xl font-bold">No wallets were found for your search</p>
 			</div>
 		{:else}
