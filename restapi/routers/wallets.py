@@ -2,10 +2,12 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel, Field
-from sqlmodel import select as sql_select, and_ as sql_and_, func as sql_func, case as sql_case, literal as sql_literal
+from sqlmodel import (select as sql_select, and_ as sql_and_, func as sql_func, case as sql_case,
+                      literal as sql_literal, desc as sql_desc, over as sql_over)
 
 from dependencies import DbSessionDependency, AuthedUserDependency
 from db_models import DbWallet, DbBudget, DbMovement
+from rules import RegexPatterns
 
 router = APIRouter(prefix="/wallets")
 
@@ -13,8 +15,8 @@ class ReqNewWallet(BaseModel):
     name: str = Field(min_length=3, max_length=32)
     description: str | None = Field(default=None, max_length=512)
     start_balance: float = Field(default=0, lt=1000000, gt=-1000000)
-    iconify_name: str | None = Field(default=None, pattern=r"^[a-z0-9]+(-[a-z0-9]+)*+:[a-z0-9]+(-[a-z0-9]+)*$")
-    color: str | None = Field(default=None, pattern=r"^#(?:[0-9a-fA-F]{3}){1,2}$")
+    iconify_name: str | None = Field(default=None, pattern=RegexPatterns.ICONIFY_ICON)
+    color: str | None = Field(default=None, pattern=RegexPatterns.HEX_COLOR)
 
 class ResWalletBudgetCard(BaseModel):
     id: int
@@ -150,12 +152,33 @@ async def get_all_of_wallet(db_session: DbSessionDependency, user: AuthedUserDep
         filters.append(DbBudget.id == budget_id)
 
     query_movements = (
-        sql_select(DbMovement)
+        sql_select(
+            DbMovement,
+            DbBudget.name,
+            sql_over(
+                sql_func.sum(
+                    sql_case(
+                        (DbMovement.is_deposit, DbMovement.amount),
+                        else_=-DbMovement.amount
+                    )
+                ),
+                DbMovement.budget_id,
+                order_by=DbMovement.done_at
+            )
+        )
         .join_from(DbMovement, DbBudget).join_from(DbBudget, DbWallet)
         .where(sql_and_(*filters))
+        .order_by(sql_desc(DbMovement.done_at))
     )
 
-    return db_session.exec(query_movements).all()
+    data = []
+    for row in db_session.exec(query_movements):
+        row_data = row[0].model_dump()
+        row_data["budget_name"] = row[1]
+        row_data["budget_balance"] = row[2]
+        data.append(row_data)
+
+    return data
 
 @router.post("/new")
 async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqNewWallet, Form()]):
