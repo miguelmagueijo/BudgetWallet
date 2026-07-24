@@ -48,6 +48,6 @@ async def update_movement(db_session: DbSessionDependency, user: AuthedUserDepen
 async def delete_budget(db_session: DbSessionDependency, user: AuthedUserDependency, movement_id: int):
     target_movement = fetch_target_movement(db_session, movement_id, user.id)
 
-    generic_record_delete(db_session, movement_id, "Movement not found")
+    generic_record_delete(db_session, target_movement, "Movement not found")
 
     return {"id": movement_id}
