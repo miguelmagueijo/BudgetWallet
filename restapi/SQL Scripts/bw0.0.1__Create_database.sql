@@ -39,8 +39,10 @@ CREATE TABLE budget (
 CREATE TABLE movement_category (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
-    description TEXT NOT NULL,
+    description TEXT,
     color VARCHAR(7),
+    created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     user_id INTEGER, -- Who created, null if available for everyone
     CONSTRAINT FK_mvt_userAccount_id FOREIGN KEY (user_id) REFERENCES user_account (id) ON DELETE CASCADE
 );
