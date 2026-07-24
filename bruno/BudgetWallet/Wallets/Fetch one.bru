@@ -1,0 +1,20 @@
+meta {
+  name: Fetch one
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://127.0.0.1:8000/wallets/?with_budgets=true
+  body: none
+  auth: inherit
+}
+
+params:query {
+  with_budgets: true
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
