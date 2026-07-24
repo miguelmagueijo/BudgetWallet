@@ -10,7 +10,11 @@ class BaseDbModel(SQLModel):
 
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(nullable=False, default_factory=lambda: datetime.now(DATETIME_UTC))
-    updated_at: datetime = Field(nullable=False, default_factory=lambda: datetime.now(DATETIME_UTC))
+    updated_at: datetime = Field(nullable=False,
+                                 default_factory=lambda: datetime.now(DATETIME_UTC),
+                                 sa_column_kwargs={
+                                     "onupdate": lambda: datetime.now(DATETIME_UTC),
+                                 })
 
 class DbUser(BaseDbModel, table=True):
     __tablename__ = "user_account"
