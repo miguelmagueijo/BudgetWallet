@@ -4,15 +4,14 @@ meta {
   seq: 2
 }
 
-put {
-  url: http://127.0.0.1:8000/wallets/update
+patch {
+  url: http://127.0.0.1:8000/wallets/1
   body: multipartForm
   auth: inherit
 }
 
 body:multipart-form {
-  id: 3
-  name: XTeste
+  ~name: XTeste
 }
 
 settings {
