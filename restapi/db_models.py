@@ -1,7 +1,8 @@
 from datetime import datetime
 from datetime import UTC as DATETIME_UTC
+from decimal import Decimal
 
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, Column, Numeric
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -55,7 +56,7 @@ class DbMovement(BaseDbModel, table=True):
     __tablename__ = "movement"
 
     title: str = Field(nullable=False)
-    amount: float = Field(nullable=False)
+    amount: Decimal = Field(sa_column=Column(Numeric(12, 4), nullable=False))
     is_deposit: bool = Field(nullable=False)
     done_at: datetime = Field(nullable=False, default_factory=lambda: datetime.now(DATETIME_UTC))
 

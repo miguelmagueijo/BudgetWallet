@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Annotated, Optional, Union
 
 from fastapi import APIRouter, Form, HTTPException
@@ -25,14 +26,14 @@ class ResWalletBudget(BaseModel):
     id: int
     name: str
     color: Optional[str]
-    total: float = 0
+    total: Decimal = Decimal(0)
 
 class ResWallet(BaseModel):
     id: int
     name: str
     icon: Optional[str]
     color: Optional[str]
-    balance: float = 0
+    balance: Decimal = Decimal(0)
     budgets: Optional[list[ResWalletBudget]] = None
 
 def fetch_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: Optional[int] = None,

@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional, Annotated, List
 
 from fastapi import APIRouter, Form, HTTPException
@@ -28,7 +29,7 @@ class ReqEditBudget(ReqNewBudget):
 class ReqNewBudgetMovement(BaseModel):
     title: str = Field(pattern=RegexPatterns.WALLET_BUDGET_NAME)
     description: Optional[str] = Field(default=None, max_length=512)
-    amount: float = Field()
+    amount: Decimal = Field()
     is_deposit: bool = Field(default=True)
     done_at: Optional[datetime] = Field(default=None)
     category_id: Optional[int] = Field(default=None)
@@ -37,7 +38,7 @@ class ReqNewBudgetMovement(BaseModel):
 class ResBudgetMovement(BaseModel):
     id: int
     title: str
-    amount: float
+    amount: Decimal
     is_deposit: bool
     done_at: datetime
 
@@ -46,7 +47,7 @@ class ResBudget(BaseModel):
     name: str
     icon: Optional[str]
     color: Optional[str]
-    balance: float = 0
+    balance: Decimal = Decimal(0)
     movements: Optional[list[ResBudgetMovement]] = None
 
 def does_wallet_belong_to_user(db_session: Session, wallet_id: int, user_id: int) -> bool:

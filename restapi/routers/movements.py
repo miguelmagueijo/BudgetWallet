@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional, Annotated
 
 from fastapi import APIRouter, Form
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/movements")
 class ReqEditMovement(BaseModel):
     title: Optional[str] = Field(default=None, pattern=RegexPatterns.WALLET_BUDGET_NAME)
     description: Optional[str] = Field(default=None, max_length=512)
-    amount: Optional[float] = Field(default=0)
+    amount: Optional[Decimal] = Field(default=Decimal(0))
     is_deposit: bool = Field(default=True)
     done_at: Optional[datetime] = Field(default=None)
     category_id: Optional[int] = Field(default=None)
