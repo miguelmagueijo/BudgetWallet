@@ -18,7 +18,6 @@ class ReqNewWallet(BaseModel):
     color: Optional[str] = Field(default=None, pattern=RegexPatterns.HEX_COLOR)
 
 class ReqEditWallet(ReqNewWallet):
-    id: int = Field()
     name: Optional[str] = Field(default=None, min_length=3, max_length=32)
 
 class ResWalletBudget(BaseModel):
@@ -171,7 +170,7 @@ async def get_budgets_wallet(db_session: DbSessionDependency, user: AuthedUserDe
 
     return data
 
-@router.post("/new")
+@router.post("/")
 async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency,
                      form_data: Annotated[ReqNewWallet, Form()]):
     new_wallet = DbWallet(user=user, **form_data.model_dump())
@@ -181,19 +180,19 @@ async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency
 
     return {"id": new_wallet.id}
 
-@router.put("/update")
-async def update_wallet(db_session: DbSessionDependency, user: AuthedUserDependency,
+@router.patch("/{wallet_id}")
+async def update_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int,
                         form_data: Annotated[ReqEditWallet, Form()]):
     target_wallet: DbWallet | None = db_session.exec(
-        sql_select(DbWallet).where(sql_and_(DbWallet.id == form_data.id, DbWallet.user == user))).first()
+        sql_select(DbWallet).where(sql_and_(DbWallet.id == wallet_id, DbWallet.user == user))).first()
 
     if target_wallet is None:
         raise HTTPException(status_code=404, detail="Wallet not found")
 
     update_data = form_data.model_dump(exclude_unset=True)
 
-    if len(update_data.keys()) == 1:
-        return {"id": target_wallet.id}
+    if len(update_data.keys()) == 0:
+        return {"id": wallet_id}
 
     for key, value in update_data.items():
         setattr(target_wallet, key, value)
@@ -201,9 +200,9 @@ async def update_wallet(db_session: DbSessionDependency, user: AuthedUserDepende
     db_session.add(target_wallet)
     db_session.commit()
 
-    return {"id": target_wallet.id}
+    return {"id": wallet_id}
 
-@router.delete("/delete/{wallet_id}")
+@router.delete("/{wallet_id}")
 async def delete_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
     target_wallet = db_session.exec(
         sql_select(DbWallet)
