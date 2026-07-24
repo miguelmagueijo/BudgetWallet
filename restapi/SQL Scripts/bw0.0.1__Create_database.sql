@@ -1,5 +1,3 @@
--- CREATE DATABASE budgetwallet;
-
 --######################################################################################################################
 -- TABLES
 --######################################################################################################################
@@ -20,7 +18,6 @@ CREATE TABLE wallet (
     description TEXT,
     iconify_name TEXT,
     color VARCHAR(7),
-    start_balance REAL NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     user_id INTEGER NOT NULL, -- Owner
@@ -33,7 +30,6 @@ CREATE TABLE budget (
     description TEXT,
     iconify_name TEXT,
     color VARCHAR(7),
-    is_permanent BOOLEAN NOT NULL DEFAULT FALSE, -- only deletes when wallet is deleted
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     wallet_id INTEGER NOT NULL,
@@ -45,7 +41,8 @@ CREATE TABLE movement_category (
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     color VARCHAR(7),
-    is_system BOOLEAN NOT NULL DEFAULT FALSE -- if set only the admin can edit this records!
+    user_id INTEGER, -- Who created, null if available for everyone
+    CONSTRAINT FK_mvt_userAccount_id FOREIGN KEY (user_id) REFERENCES user_account (id) ON DELETE CASCADE
 );
 
 CREATE TABLE movement (
@@ -54,7 +51,6 @@ CREATE TABLE movement (
     description TEXT,
     amount REAL NOT NULL,
     is_deposit BOOLEAN NOT NULL, -- if TRUE is money IN if FALSE is money OUT
-    is_manual BOOLEAN NOT NULL, -- if TRUE means that is a management type movement (fix the actual balance)
     done_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
@@ -67,35 +63,7 @@ CREATE TABLE movement (
 --######################################################################################################################
 -- TRIGGERS
 --######################################################################################################################
-CREATE OR REPLACE FUNCTION create_default_budget()
-RETURNS TRIGGER AS $$
-DECLARE
-    budget_id budget.id%TYPE;
-BEGIN
-   INSERT INTO budget (name, description, is_permanent, wallet_id)
-   VALUES ('Money', 'Default budget, where you money uncategorized is stored. This budget cannot be deleted', TRUE, NEW.id)
-   RETURNING id INTO budget_id;
 
-   IF NEW.start_balance <> 0 THEN
-       INSERT INTO movement (title, description, amount, is_deposit, is_manual, done_at, budget_id, category_id)
-       VALUES ('Start balance',
-               'This movement represents a movement which is the start money',
-               NEW.start_balance,
-               true,
-               false,
-               (now() AT TIME ZONE 'UTC'),
-               budget_id,
-               1);
-   END IF;
-
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER TRG_AI_Wallet
-AFTER INSERT ON wallet
-FOR EACH ROW
-EXECUTE FUNCTION create_default_budget();
 
 --######################################################################################################################
 -- Default data
@@ -103,5 +71,17 @@ EXECUTE FUNCTION create_default_budget();
 INSERT INTO user_account (username, password, is_active)
 VALUES ('dev', '$argon2id$v=19$m=16,t=4,p=1$cXlxUWFxc2hmWXVQYmdrdQ$a/pIKF1sqjISk0pGkQWM8+/iR1J0jRN7WdBOAwrh9gw', True);
 
-INSERT INTO movement_category (title, description, color, is_system)
-VALUES ('SYSTEM', 'Movements made automatically by the system', '#FFFFFF', TRUE);
+INSERT INTO movement_category (title, description, color)
+VALUES ('Adjustment', 'Movement created to adjust the balance of the budget', '#FFFFFF');
+
+INSERT INTO movement_category (title, description, color)
+VALUES ('Income', 'Monthly income', '#FFFFFF');
+
+INSERT INTO movement_category (title, description, color)
+VALUES ('Expense', 'General one time expense', '#FFFFFF');
+
+INSERT INTO movement_category (title, description, color)
+VALUES ('Recurring', 'Recurring expense', '#FFFFFF');
+
+INSERT INTO movement_category (title, description, color)
+VALUES ('Deposit', 'One time deposit', '#FFFFFF');
