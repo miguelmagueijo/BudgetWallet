@@ -13,13 +13,13 @@ from rules import RegexPatterns
 router = APIRouter(prefix="/wallets")
 
 class ReqNewWallet(BaseModel):
-    name: str = Field(min_length=3, max_length=32)
+    name: str = Field(pattern=RegexPatterns.WALLET_BUDGET_NAME)
     description: Optional[str] = Field(default=None, max_length=512)
-    iconify_name: Optional[str] = Field(default=None, pattern=RegexPatterns.ICONIFY_ICON)
+    iconify_name: Optional[str] = Field(default=None, pattern=RegexPatterns.ICONIFY_ICON, alias="icon")
     color: Optional[str] = Field(default=None, pattern=RegexPatterns.HEX_COLOR)
 
 class ReqEditWallet(ReqNewWallet):
-    name: Optional[str] = Field(default=None, min_length=3, max_length=32)
+    name: Optional[str] = Field(default=None, pattern=RegexPatterns.WALLET_BUDGET_NAME)
 
 class ResWalletBudget(BaseModel):
     id: int
