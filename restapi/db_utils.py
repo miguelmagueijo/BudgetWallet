@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Callable
 
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -15,7 +15,7 @@ def generic_record_delete(db_session: Session, target: BaseDbModel | None, not_e
     db_session.commit()
 
 def generic_record_patch(db_session: Session, target: BaseDbModel | None, data: BaseModel,
-                          not_existing_msg: str):
+                          not_existing_msg: str, before_update: Callable[[], None] | None = None):
     if target is None:
         raise HTTPException(status_code=404, detail=not_existing_msg)
 
@@ -24,8 +24,14 @@ def generic_record_patch(db_session: Session, target: BaseDbModel | None, data: 
     if len(update_data.keys()) == 0:
         return
 
+    if before_update is not None:
+        before_update()
+
+    allowed_fields = target.model_fields.keys()
+
     for key, value in update_data.items():
-        setattr(target, key, value)
+        if key in allowed_fields:
+            setattr(target, key, value)
 
     db_session.add(target)
     db_session.commit()
