@@ -13,28 +13,31 @@ router = APIRouter(prefix="/wallets")
 
 class ReqNewWallet(BaseModel):
     name: str = Field(min_length=3, max_length=32)
-    description: str | None = Field(default=None, max_length=512)
-    start_balance: float = Field(default=0, lt=1000000, gt=-1000000)
-    iconify_name: str | None = Field(default=None, pattern=RegexPatterns.ICONIFY_ICON)
-    color: str | None = Field(default=None, pattern=RegexPatterns.HEX_COLOR)
+    description: Optional[str] = Field(default=None, max_length=512)
+    iconify_name: Optional[str] = Field(default=None, pattern=RegexPatterns.ICONIFY_ICON)
+    color: Optional[str] = Field(default=None, pattern=RegexPatterns.HEX_COLOR)
 
-class ResWalletBudgetCard(BaseModel):
+class ReqEditWallet(ReqNewWallet):
+    id: int = Field()
+    name: Optional[str] = Field(default=None, min_length=3, max_length=32)
+
+class ResWalletBudget(BaseModel):
     id: int
     name: str
     color: Optional[str]
-    total: float
+    total: float = 0
 
-class ResWalletCard(BaseModel):
+class ResWallet(BaseModel):
     id: int
     name: str
     icon: Optional[str]
     color: Optional[str]
-    budgets: list[ResWalletBudgetCard] = []
-    total_money: float = 0
+    balance: float = 0
+    budgets: Optional[list[ResWalletBudget]] = []
 
-@router.get("/", response_model=list[ResWalletCard])
-async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDependency):
-    wallets_results: dict[int, ResWalletCard] = {}
+@router.get("/", response_model=dict[int,ResWallet])
+async def get_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, with_budgets: bool = False):
+    wallets_results: dict[int, ResWallet] = {}
 
     wallets_query = (
         sql_select(
@@ -55,10 +58,11 @@ async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDepen
                 sql_literal(0)
             ).label("budget_total")
         )
-        .join_from(DbWallet, DbBudget)
+        .outerjoin_from(DbWallet, DbBudget)
         .outerjoin_from(DbBudget, DbMovement)
         .where(DbWallet.user == user)
         .group_by(DbWallet.id, DbWallet.name, DbBudget.id, DbBudget.name)
+        .order_by(DbWallet.name)
     )
 
     for row in db_session.exec(wallets_query):
@@ -66,27 +70,31 @@ async def get_all_wallets(db_session: DbSessionDependency, user: AuthedUserDepen
 
         wallet = wallets_results.get(row_dict["wallet_id"])
         if not wallet:
-            wallet = ResWalletCard(
+            wallet = ResWallet(
                 id=row_dict["wallet_id"],
                 name=row_dict["wallet_name"],
                 icon=row_dict["wallet_icon"],
-                color=row_dict["wallet_color"],
-                budgets=[]
+                color=row_dict["wallet_color"]
             )
             wallets_results[wallet.id] = wallet
 
-        wallet.budgets.append(ResWalletBudgetCard(
-                                id=row_dict["budget_id"],
-                                name=row_dict["budget_name"],
-                                color=row_dict["budget_color"],
-                                total=row_dict["budget_total"]
-                            ))
-        wallet.total_money += row_dict["budget_total"]
+        if with_budgets:
+            if wallet.budgets is None:
+                wallet.budgets = []
 
-    return list(wallets_results.values())
+            wallet.budgets.append(ResWalletBudget(
+                                    id=row_dict["budget_id"],
+                                    name=row_dict["budget_name"],
+                                    color=row_dict["budget_color"],
+                                    total=row_dict["budget_total"]
+                                ))
+
+        wallet.balance += row_dict["budget_total"]
+
+    return wallets_results
 
 @router.get("/{wallet_id}")
-async def get_single_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
+async def get_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
     wallet_query = (
         sql_select(
             DbWallet.id,
@@ -104,7 +112,7 @@ async def get_single_wallet(db_session: DbSessionDependency, user: AuthedUserDep
                 sql_literal(0)
             ).label("wallet_total")
         )
-        .join_from(DbWallet, DbBudget)
+        .outerjoin_from(DbWallet, DbBudget)
         .outerjoin_from(DbBudget, DbMovement)
         .where(sql_and_(DbWallet.user == user, DbWallet.id == wallet_id))
         .group_by(DbWallet)
@@ -118,14 +126,13 @@ async def get_single_wallet(db_session: DbSessionDependency, user: AuthedUserDep
     return result._mapping
 
 @router.get("/{wallet_id}/budgets")
-async def get_all_of_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
+async def get_budgets_of_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
     query_budgets = (
         sql_select(
             DbBudget.id,
             DbBudget.name,
             DbBudget.iconify_name,
             DbBudget.color,
-            DbBudget.is_permanent,
             sql_func.coalesce(
                 sql_func.sum(
                     sql_case((DbMovement.is_deposit, DbMovement.amount), else_=-DbMovement.amount)
@@ -133,7 +140,8 @@ async def get_all_of_wallet(db_session: DbSessionDependency, user: AuthedUserDep
                 sql_literal(0)
             ).label("budget_total")
         )
-        .join_from(DbBudget, DbWallet).outerjoin_from(DbBudget, DbMovement)
+        .outerjoin_from(DbBudget, DbWallet)
+        .outerjoin_from(DbBudget, DbMovement)
         .where(sql_and_(DbBudget.wallet_id == wallet_id, DbWallet.user_id == user.id))
         .group_by(DbBudget.id, DbBudget.name)
     )
@@ -145,7 +153,7 @@ async def get_all_of_wallet(db_session: DbSessionDependency, user: AuthedUserDep
     return budgets_data
 
 @router.get("/{wallet_id}/movements")
-async def get_all_of_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int, budget_id: int = None):
+async def get_budgets_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int, budget_id: Optional[int]):
     filters = [DbWallet.id == wallet_id, DbWallet.user_id == user.id]
 
     if budget_id is not None:
@@ -187,10 +195,28 @@ async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency
     db_session.add(new_wallet)
     db_session.commit()
 
-    db_session.refresh(new_wallet)
+    return {"id": new_wallet.id}
 
-    return {"id": new_wallet.id, "budget_id": new_wallet.budgets[0].id}
+@router.put("/update")
+async def update_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqEditWallet, Form()]):
+    target_wallet: DbWallet | None = db_session.exec(
+        sql_select(DbWallet).where(sql_and_(DbWallet.id == form_data.id, DbWallet.user == user))).first()
 
+    if target_wallet is None:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    update_data = form_data.model_dump(exclude_unset=True)
+
+    if len(update_data.keys()) == 1:
+        return {"id": target_wallet.id}
+
+    for key, value in update_data.items():
+        setattr(target_wallet, key, value)
+
+    db_session.add(target_wallet)
+    db_session.commit()
+
+    return {"id": target_wallet.id}
 
 @router.delete("/delete/{wallet_id}")
 async def delete_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
