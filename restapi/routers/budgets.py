@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Annotated
+from typing import Optional, Annotated, List
 
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel, Field
@@ -164,6 +164,38 @@ async def delete_budget(db_session: DbSessionDependency, user: AuthedUserDepende
     return {"id": budget_id}
 
 # Movements
+@router.get("/{budget_id}/movements", response_model=dict[int, ResBudgetMovement])
+async def get_budget_movements(db_session: DbSessionDependency, user: AuthedUserDependency, budget_id: int):
+    target_budget: DbBudget | None = db_session.exec(
+        sql_select(DbBudget)
+        .join(DbWallet)
+        .where(sql_and_(DbBudget.id == budget_id, DbWallet.user_id == user.id))
+    ).first()
+
+    if target_budget is None:
+        raise HTTPException(status_code=400, detail="Budget to fetch movements not found")
+
+    query_movements = (
+        sql_select(
+            DbMovement.id,
+            DbMovement.budget_id,
+            DbMovement.title,
+            DbMovement.amount,
+            DbMovement.is_deposit,
+            DbMovement.done_at,
+        )
+        .where(DbMovement.budget_id == budget_id)
+        .order_by(sql_desc(DbMovement.done_at))
+    )
+
+    movements: dict[int, ResBudgetMovement] = {}
+
+    for row in db_session.exec(query_movements).mappings():
+        movement = ResBudgetMovement(**row)
+        movements[movement.id] = movement
+
+    return movements
+
 @router.post("/{budget_id}/movements")
 async def create_new_budget_movement(db_session: DbSessionDependency, user: AuthedUserDependency, budget_id: int,
                                      form_data: Annotated[ReqNewBudgetMovement, Form()]):
