@@ -49,7 +49,7 @@ CREATE TABLE movement (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
-    amount REAL NOT NULL,
+    amount NUMERIC(12, 4) NOT NULL,
     is_deposit BOOLEAN NOT NULL, -- if TRUE is money IN if FALSE is money OUT
     done_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
