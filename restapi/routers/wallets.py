@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import (select as sql_select, and_ as sql_and_, func as sql_func, case as sql_case,
                       literal as sql_literal, desc as sql_desc, over as sql_over)
 
+from db_utils import generic_record_delete, generic_record_patch
 from dependencies import DbSessionDependency, AuthedUserDependency
 from db_models import DbWallet, DbBudget, DbMovement
 from rules import RegexPatterns
@@ -186,19 +187,7 @@ async def update_wallet(db_session: DbSessionDependency, user: AuthedUserDepende
     target_wallet: DbWallet | None = db_session.exec(
         sql_select(DbWallet).where(sql_and_(DbWallet.id == wallet_id, DbWallet.user == user))).first()
 
-    if target_wallet is None:
-        raise HTTPException(status_code=404, detail="Wallet not found")
-
-    update_data = form_data.model_dump(exclude_unset=True)
-
-    if len(update_data.keys()) == 0:
-        return {"id": wallet_id}
-
-    for key, value in update_data.items():
-        setattr(target_wallet, key, value)
-
-    db_session.add(target_wallet)
-    db_session.commit()
+    generic_record_patch(db_session, target_wallet, form_data, "Wallet not found")
 
     return {"id": wallet_id}
 
@@ -209,10 +198,6 @@ async def delete_wallet(db_session: DbSessionDependency, user: AuthedUserDepende
         .where(sql_and_(DbWallet.id == wallet_id, DbWallet.user == user))
     ).first()
 
-    if target_wallet is None:
-        raise HTTPException(status_code=404, detail="Wallet not found")
+    generic_record_delete(db_session, target_wallet, "Wallet not found")
 
-    db_session.delete(target_wallet)
-    db_session.commit()
-
-    return {"id": target_wallet.id}
+    return {"id": wallet_id}
