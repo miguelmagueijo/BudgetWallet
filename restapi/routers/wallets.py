@@ -33,9 +33,9 @@ class ResWallet(BaseModel):
     icon: Optional[str]
     color: Optional[str]
     balance: float = 0
-    budgets: Optional[list[ResWalletBudget]] = []
+    budgets: Optional[list[ResWalletBudget]] = None
 
-@router.get("/", response_model=dict[int,ResWallet])
+@router.get("/", response_model=dict[int,ResWallet], response_model_exclude_none=True)
 async def get_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, with_budgets: bool = False):
     wallets_results: dict[int, ResWallet] = {}
 
