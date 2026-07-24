@@ -1,17 +1,17 @@
 meta {
-  name: Update
+  name: Fetch all categories
   type: http
-  seq: 2
+  seq: 5
 }
 
-patch {
-  url: http://127.0.0.1:8000/movements/4
+get {
+  url: http://127.0.0.1:8000/movements/categories
   body: multipartForm
   auth: inherit
 }
 
 body:multipart-form {
-  title: Reforco 23
+  movement_id: 2
 }
 
 settings {
