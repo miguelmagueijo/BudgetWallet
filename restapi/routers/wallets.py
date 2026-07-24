@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Union
 
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel, Field
@@ -35,9 +35,13 @@ class ResWallet(BaseModel):
     balance: float = 0
     budgets: Optional[list[ResWalletBudget]] = None
 
-@router.get("/", response_model=dict[int,ResWallet], response_model_exclude_none=True)
-async def get_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, with_budgets: Optional[bool] = False):
+def fetch_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: Optional[int] = None,
+                  with_budgets: bool = False):
     wallets_results: dict[int, ResWallet] = {}
+
+    filters = [DbWallet.user == user]
+    if wallet_id is not None:
+        filters.append(DbWallet.id == wallet_id)
 
     wallets_query = (
         sql_select(
@@ -60,7 +64,7 @@ async def get_wallets(db_session: DbSessionDependency, user: AuthedUserDependenc
         )
         .outerjoin_from(DbWallet, DbBudget)
         .outerjoin_from(DbBudget, DbMovement)
-        .where(DbWallet.user == user)
+        .where(sql_and_(*filters))
         .group_by(DbWallet.id, DbWallet.name, DbBudget.id, DbBudget.name)
         .order_by(DbWallet.name)
     )
@@ -79,47 +83,29 @@ async def get_wallets(db_session: DbSessionDependency, user: AuthedUserDependenc
 
         if with_budgets and row["budget_id"] is not None:
             wallet.budgets.append(ResWalletBudget(
-                                    id=row["budget_id"],
-                                    name=row["budget_name"],
-                                    color=row["budget_color"],
-                                    total=row["budget_balance"]
-                                ))
+                id=row["budget_id"],
+                name=row["budget_name"],
+                color=row["budget_color"],
+                total=row["budget_balance"]
+            ))
 
         wallet.balance += row["budget_balance"]
 
     return wallets_results
 
+@router.get("/", response_model=Union[dict[int,ResWallet], ResWallet], response_model_exclude_none=True)
+async def get_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, with_budgets: bool = False):
+    return fetch_wallets(db_session, user, with_budgets=with_budgets)
+
 @router.get("/{wallet_id}")
-async def get_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
-    wallet_query = (
-        sql_select(
-            DbWallet.id,
-            DbWallet.name,
-            DbWallet.description,
-            DbWallet.iconify_name.label("icon"),
-            DbWallet.color,
-            sql_func.coalesce(
-                sql_func.sum(
-                    sql_case(
-                        (DbMovement.is_deposit, DbMovement.amount),
-                        else_=-DbMovement.amount
-                    )
-                ),
-                sql_literal(0)
-            ).label("balance")
-        )
-        .outerjoin_from(DbWallet, DbBudget)
-        .outerjoin_from(DbBudget, DbMovement)
-        .where(sql_and_(DbWallet.user == user, DbWallet.id == wallet_id))
-        .group_by(DbWallet)
-    )
+async def get_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int,
+                     with_budgets: bool = False):
+    result = fetch_wallets(db_session, user, wallet_id, with_budgets)
 
-    result = db_session.exec(wallet_query).mappings().first()
-
-    if not result:
+    if len(result) == 0:
         raise HTTPException(status_code=404, detail="Wallet not found")
 
-    return result
+    return result[wallet_id]
 
 @router.get("/{wallet_id}/budgets")
 async def get_budgets_of_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
