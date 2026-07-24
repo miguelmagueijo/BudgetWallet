@@ -26,6 +26,7 @@ class DbUser(BaseDbModel, table=True):
     is_admin: bool = Field(nullable=False, default=False)
 
     wallets: list["DbWallet"] = Relationship(back_populates="user")
+    movement_category: list["DbMovementCategory"] = Relationship(back_populates="user")
 
 class DbWallet(BaseDbModel, table=True):
     __tablename__ = "wallet"
@@ -52,6 +53,18 @@ class DbBudget(BaseDbModel, table=True):
 
     movements: list["DbMovement"] = Relationship(back_populates="budget")
 
+class DbMovementCategory(BaseDbModel, table=True):
+    __tablename__ = "movement_category"
+
+    title: str = Field(nullable=False)
+    description: str = Field(nullable=True)
+    color: str = Field(nullable=True, regex=r"^#[0-9a-fA-F]{6}$")
+
+    user_id: int = Field(nullable=False, foreign_key="user_account.id")
+    user: DbUser = Relationship(back_populates="movement_category")
+
+    movements: list["DbMovement"] = Relationship(back_populates="category")
+
 class DbMovement(BaseDbModel, table=True):
     __tablename__ = "movement"
 
@@ -62,3 +75,6 @@ class DbMovement(BaseDbModel, table=True):
 
     budget_id: int = Field(nullable=False, foreign_key="budget.id")
     budget: DbBudget = Relationship(back_populates="movements")
+
+    category_id: int = Field(nullable=False, foreign_key="movement_category.id")
+    category: DbMovementCategory = Relationship(back_populates="movements")
