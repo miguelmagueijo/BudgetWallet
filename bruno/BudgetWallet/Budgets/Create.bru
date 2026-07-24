@@ -1,5 +1,5 @@
 meta {
-  name: New
+  name: Create
   type: http
   seq: 1
 }
@@ -8,6 +8,11 @@ post {
   url: http://127.0.0.1:8000/budgets/
   body: multipartForm
   auth: inherit
+}
+
+body:multipart-form {
+  name: Outro
+  wallet_id: 5
 }
 
 settings {

@@ -1,17 +1,18 @@
 meta {
-  name: Update
+  name: Create movement
   type: http
-  seq: 2
+  seq: 5
 }
 
-patch {
-  url: http://127.0.0.1:8000/wallets/4
+post {
+  url: http://127.0.0.1:8000/budgets/1/movements
   body: multipartForm
   auth: inherit
 }
 
 body:multipart-form {
-  name: Novo Teste
+  title: Deposito inicial
+  amount: 15
 }
 
 settings {
