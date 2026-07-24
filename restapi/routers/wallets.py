@@ -135,7 +135,8 @@ async def get_budgets_of_wallet(db_session: DbSessionDependency, user: AuthedUse
     return budgets_data
 
 @router.get("/{wallet_id}/movements")
-async def get_budgets_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int, budget_id: Optional[int] = None):
+async def get_budgets_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int,
+                             budget_id: Optional[int] = None):
     filters = [DbWallet.id == wallet_id, DbWallet.user_id == user.id]
 
     if budget_id is not None:
@@ -171,7 +172,8 @@ async def get_budgets_wallet(db_session: DbSessionDependency, user: AuthedUserDe
     return data
 
 @router.post("/new")
-async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqNewWallet, Form()]):
+async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency,
+                     form_data: Annotated[ReqNewWallet, Form()]):
     new_wallet = DbWallet(user=user, **form_data.model_dump())
 
     db_session.add(new_wallet)
@@ -180,7 +182,8 @@ async def new_wallet(db_session: DbSessionDependency, user: AuthedUserDependency
     return {"id": new_wallet.id}
 
 @router.put("/update")
-async def update_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqEditWallet, Form()]):
+async def update_wallet(db_session: DbSessionDependency, user: AuthedUserDependency,
+                        form_data: Annotated[ReqEditWallet, Form()]):
     target_wallet: DbWallet | None = db_session.exec(
         sql_select(DbWallet).where(sql_and_(DbWallet.id == form_data.id, DbWallet.user == user))).first()
 
@@ -202,7 +205,10 @@ async def update_wallet(db_session: DbSessionDependency, user: AuthedUserDepende
 
 @router.delete("/delete/{wallet_id}")
 async def delete_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
-    target_wallet = db_session.exec(sql_select(DbWallet).where(sql_and_(DbWallet.id == wallet_id, DbWallet.user == user))).first()
+    target_wallet = db_session.exec(
+        sql_select(DbWallet)
+        .where(sql_and_(DbWallet.id == wallet_id, DbWallet.user == user))
+    ).first()
 
     if target_wallet is None:
         raise HTTPException(status_code=404, detail="Wallet not found")
