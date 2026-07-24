@@ -29,7 +29,6 @@ class DbWallet(BaseDbModel, table=True):
     description: str = Field(nullable=True)
     iconify_name: str = Field(nullable=False)
     color: str = Field(nullable=True, regex=r"^#[0-9a-fA-F]{6}$")
-    start_balance: float = Field(default=0, lt=1000000, gt=-1000000)
     user_id: int = Field(nullable=False, foreign_key="user_account.id")
     user: DbUser = Relationship(back_populates="wallets")
 
@@ -42,7 +41,6 @@ class DbBudget(BaseDbModel, table=True):
     description: str = Field(nullable=True)
     iconify_name: str = Field(nullable=True)
     color: str = Field(nullable=True, regex=r"^#[0-9a-fA-F]{6}$")
-    is_permanent: bool = Field(nullable=False, default=False)
 
     wallet_id: int = Field(nullable=False, foreign_key="wallet.id")
     wallet: DbWallet = Relationship(back_populates="budgets")
@@ -55,7 +53,6 @@ class DbMovement(BaseDbModel, table=True):
     title: str = Field(nullable=False)
     amount: float = Field(nullable=False)
     is_deposit: bool = Field(nullable=False)
-    is_manual: bool = Field(nullable=False)
     done_at: datetime = Field(nullable=False, default_factory=lambda: datetime.now(DATETIME_UTC))
 
     budget_id: int = Field(nullable=False, foreign_key="budget.id")
