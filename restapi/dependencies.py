@@ -11,7 +11,7 @@ from db_models import DbUser
 
 class Settings(BaseSettings):
     app_name: str = "Budget Wallet REST API"
-    version: str = "0.0.1"
+    version: str = "0.1.0"
     jwt_secret: str
     jwt_algorithm: str
     jwt_issuer: str
