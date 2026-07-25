@@ -5,7 +5,7 @@ from typing import Optional, Annotated
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel, Field
 from sqlmodel import (select as sql_select, and_ as sql_and_, func as sql_func, case as sql_case,
-                      literal as sql_literal, Session, desc as sql_desc)
+                      literal as sql_literal, Session, desc as sql_desc, or_ as sql_or_)
 
 from db_models import DbWallet, DbBudget, DbMovement, DbMovementCategory
 from db_utils import generic_record_delete, generic_record_patch
@@ -241,7 +241,16 @@ async def create_new_budget_movement(db_session: DbSessionDependency, user: Auth
     if target_budget is None:
         raise HTTPException(status_code=400, detail="Budget to create movement not found")
 
-    # TODO: category
+    if form_data.category_id is not None:
+        target_category = (
+            sql_select(DbMovementCategory)
+            .where(sql_and_(DbMovementCategory.id == form_data.category_id,
+                            sql_or_(DbMovementCategory.user_id.is_(None),
+                                    DbMovementCategory.user_id == user.id))
+                   )
+        )
+        if db_session.exec(target_category).first() is None:
+            raise HTTPException(status_code=404, detail="Movement category not found")
 
     movement = DbMovement(**form_data.model_dump())
 
