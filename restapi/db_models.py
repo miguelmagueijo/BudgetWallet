@@ -76,5 +76,5 @@ class DbMovement(BaseDbModel, table=True):
     budget_id: int = Field(nullable=False, foreign_key="budget.id")
     budget: DbBudget = Relationship(back_populates="movements")
 
-    category_id: int = Field(nullable=False, foreign_key="movement_category.id")
+    category_id: int = Field(nullable=True, foreign_key="movement_category.id")
     category: DbMovementCategory = Relationship(back_populates="movements")
