@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Annotated
+from typing import Optional, Annotated, Any
 
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel, Field
@@ -103,14 +103,12 @@ async def update_movement_category(db_session: DbSessionDependency, user: Authed
                         form_data: Annotated[ReqEditMovementCategory, Form()]):
     target_category = fetch_target_category(db_session, category_id, user)
 
-    def before_update():
-        if form_data.is_global is not None:
-            is_global = form_data.is_global
-
-            if is_global:
-                target_category.user = None if user.is_admin else target_category.user
+    def before_update(target: DbMovementCategory, update_data: dict[str, Any]):
+        if "is_global" in update_data.keys():
+            if update_data["is_global"]:
+                target.user = None if user.is_admin else target.user
             else:
-                target_category.user = user
+                target.user = user
 
     generic_record_patch(db_session, target_category, form_data, "Movement category not found", before_update)
 
@@ -136,7 +134,22 @@ async def update_movement(db_session: DbSessionDependency, user: AuthedUserDepen
                         form_data: Annotated[ReqEditMovement, Form()]):
     target_movement = fetch_target_movement(db_session, movement_id, user.id)
 
-    generic_record_patch(db_session, target_movement, form_data, "Movement not found")
+    def before_update(target: DbMovement, update_data: dict[str, Any]):
+        if "category_id" in update_data.keys():
+            if update_data["category_id"] <= 0:
+                update_data["category_id"] = None
+            else:
+                target_category = (
+                    sql_select(DbMovementCategory)
+                    .where(sql_and_(DbMovementCategory.id == form_data.category_id,
+                                    sql_or_(DbMovementCategory.user_id.is_(None),
+                                            DbMovementCategory.user_id == user.id))
+                           )
+                )
+                if db_session.exec(target_category).first() is None:
+                    raise HTTPException(status_code=404, detail="Movement category not found")
+
+    generic_record_patch(db_session, target_movement, form_data, "Movement not found", before_update)
 
     return {"id": movement_id}
 
