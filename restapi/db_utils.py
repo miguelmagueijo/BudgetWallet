@@ -25,7 +25,7 @@ def generic_record_patch(db_session: Session, target: BaseDbModel | None, data: 
         return
 
     if before_update is not None:
-        before_update()
+        before_update(target, update_data)
 
     allowed_fields = target.model_fields.keys()
 
