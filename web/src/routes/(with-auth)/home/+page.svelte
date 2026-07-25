@@ -7,7 +7,7 @@
 	import { DataStore } from "$lib/data.svelte";
 	import type { ChangeEventHandler } from "svelte/elements";
 	import type { PageProps } from "./$types";
-	import { ICONS_NAMES } from "$lib";
+	import { ICONS_NAMES, LOCAL_STORAGE_NAMES } from "$lib";
 
 	const { data }: PageProps = $props();
 
@@ -128,6 +128,8 @@
 		}
 	}
 
+	let showRoadmapMsg = $state(false);
+
 	onMount(async () => {
 		walletsSortValue = localStorage.getItem(STORAGE_WALLET_SORT_KEY);
 		if (!walletsSortValue) {
@@ -136,7 +138,14 @@
 
 		handleSortWalletChange(); // add sort before fetching data
 		fetchWallets(true);
+
+		showRoadmapMsg = localStorage.getItem(LOCAL_STORAGE_NAMES.HOME.SHOW_ROADMAP_MSG) !== "false";
 	});
+
+	function hideRoadmapMsg() {
+		showRoadmapMsg = false;
+		localStorage.setItem(LOCAL_STORAGE_NAMES.HOME.SHOW_ROADMAP_MSG, "false");
+	}
 </script>
 
 <svelte:head>
@@ -228,7 +237,17 @@
 	{/snippet}
 </Modal>
 
-<section class="my-10">
+<section>
+	{#if showRoadmapMsg}
+		<div class="mb-10 flex items-center justify-between rounded-lg bg-blue-700 p-4 text-white">
+			<p>
+				Want to know what's coming? Check the roadmap <a href="/roadmap" class="font-bold underline">here</a>
+			</p>
+			<button class="flex w-16 cursor-pointer justify-end" onclick={hideRoadmapMsg}>
+				<Icon icon="mingcute:close-fill" />
+			</button>
+		</div>
+	{/if}
 	<h2 class="mb-4 text-5xl font-bold">Hi, <span class="capitalize">{data.user.username}</span></h2>
 	<div class="grid grid-cols-3 gap-8">
 		<div class="info-card border-primary-400 bg-primary-925 text-primary-400">

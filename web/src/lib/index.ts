@@ -13,3 +13,9 @@ export const ICONS_NAMES = {
 	arrowUp: "gravity-ui:arrow-up",
 	arrowDown: "gravity-ui:arrow-down",
 } as const;
+
+export const LOCAL_STORAGE_NAMES = {
+	HOME: {
+		SHOW_ROADMAP_MSG: "home:show-roadmap-msg",
+	} as const,
+} as const;

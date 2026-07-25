@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from "@iconify/svelte";
+	import { LOCAL_STORAGE_NAMES } from "$lib";
 
 	let isLoading: boolean = false;
 	let usernameElement: HTMLInputElement;
@@ -24,6 +25,7 @@
 			});
 
 			if (res.ok) {
+				localStorage.setItem(LOCAL_STORAGE_NAMES.HOME.SHOW_ROADMAP_MSG, "true");
 				window.location.replace("/home");
 			} else {
 				if (res.status === 400 || res.status === 401) {
@@ -48,9 +50,9 @@
 
 <div class="flex h-screen items-center justify-center">
 	<div>
-		<div class="mb-12 flex items-center gap-4 text-primary-400">
+		<div class="mb-10 flex flex-col items-center justify-center gap-2 text-primary-400">
 			<Icon class="size-14" icon="streamline-ultimate:money-wallet-open-bold" />
-			<h1 class="text-center text-6xl font-bold">Budget Wallet</h1>
+			<h1 class="text-center text-3xl font-bold">Budget Wallet</h1>
 		</div>
 		{#if errorMsg}
 			<div class="mb-6 rounded-lg border-2 border-transparent bg-red-200 p-2 text-center font-semibold text-red-800">
