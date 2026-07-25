@@ -70,10 +70,10 @@ async def get_budgets(db_session: DbSessionDependency, user: AuthedUserDependenc
     filters = [DbWallet.id == wallet_id, DbWallet.user_id == user.id]
     budgets_query = (
         sql_select(
-            DbBudget.id.label("budget_id"),
-            DbBudget.name.label("budget_name"),
-            DbBudget.iconify_name.label("budget_icon"),
-            DbBudget.color.label("budget_color"),
+            DbBudget.id,
+            DbBudget.name,
+            DbBudget.iconify_name.label("icon"),
+            DbBudget.color,
             sql_func.coalesce(
                 sql_func.sum(
                     sql_case(
@@ -94,10 +94,7 @@ async def get_budgets(db_session: DbSessionDependency, user: AuthedUserDependenc
     budgets_ids = []
     for row in db_session.exec(budgets_query).mappings():
         budget = ResBudget(
-            id=row["budget_id"],
-            name=row["budget_name"],
-            icon=row["budget_icon"],
-            color=row["budget_color"],
+            **row,
             movements=[] if with_movements else None,
         )
 
@@ -140,12 +137,69 @@ async def get_budgets(db_session: DbSessionDependency, user: AuthedUserDependenc
 
     return budgets_results
 
-@router.get("/{budget_id}")
+@router.get("/{budget_id}", response_model=ResBudget, response_model_exclude_none=True)
 async def get_budget(db_session: DbSessionDependency, user: AuthedUserDependency, budget_id: int,
-                     with_budgets: bool = False):
-    # TODO
+                     with_movements: bool = False):
+    target_budget = db_session.exec(
+        sql_select(
+            DbBudget.id,
+            DbBudget.name,
+            DbBudget.iconify_name.label("icon"),
+            DbBudget.color,
+            sql_func.coalesce(
+                sql_func.sum(
+                    sql_case(
+                        (DbMovement.is_deposit, DbMovement.amount),
+                        else_=-DbMovement.amount
+                    )
+                ),
+                sql_literal(0)
+            ).label("balance")
+        )
+        .join(DbWallet)
+        .outerjoin_from(DbBudget, DbMovement)
+        .where(sql_and_(DbWallet.user_id == user.id, DbBudget.id == budget_id))
+        .group_by(DbBudget.id)
+    ).mappings().first()
 
-    return {}
+    if target_budget is None:
+        raise HTTPException(status_code=404, detail="Budget not found")
+
+    res_budget = ResBudget(**target_budget)
+
+    if with_movements:
+        res_budget.movements = []
+
+        movements_query = (
+            sql_select(
+                DbMovement.id,
+                DbMovement.budget_id,
+                DbMovement.title,
+                DbMovement.amount,
+                DbMovement.is_deposit,
+                DbMovement.done_at,
+                DbMovementCategory.id.label("mvt_id"),
+                DbMovementCategory.title.label("mvt_title"),
+                DbMovementCategory.description.label("mvt_desc"),
+                DbMovementCategory.user_id.label("mvt_user_id"),
+            )
+            .outerjoin(DbMovementCategory)
+            .where(DbMovement.budget_id == res_budget.id)
+            .order_by(sql_desc(DbMovement.done_at))
+        )
+
+        for row in db_session.exec(movements_query).mappings():
+            movement = ResBudgetMovement(**row)
+            if row["mvt_id"] is not None:
+                movement.category = ResBudgetMovementCategory(
+                    id=row["mvt_id"],
+                    title=row["mvt_title"],
+                    description=row["mvt_desc"],
+                    is_global=row["mvt_user_id"] is None,
+                )
+            res_budget.movements.append(movement)
+
+    return res_budget
 
 @router.post("/")
 async def create_budget(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqNewBudget, Form()]):
