@@ -1,13 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Annotated, List
+from typing import Optional, Annotated
 
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel, Field
 from sqlmodel import (select as sql_select, and_ as sql_and_, func as sql_func, case as sql_case,
                       literal as sql_literal, Session, desc as sql_desc)
 
-from db_models import DbWallet, DbBudget, DbMovement
+from db_models import DbWallet, DbBudget, DbMovement, DbMovementCategory
 from db_utils import generic_record_delete, generic_record_patch
 from dependencies import AuthedUserDependency, DbSessionDependency
 from rules import RegexPatterns
@@ -35,12 +35,19 @@ class ReqNewBudgetMovement(BaseModel):
     category_id: Optional[int] = Field(default=None)
 
 # Response classes
+class ResBudgetMovementCategory(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    is_global: bool
+
 class ResBudgetMovement(BaseModel):
     id: int
     title: str
     amount: Decimal
     is_deposit: bool
     done_at: datetime
+    category: Optional[ResBudgetMovementCategory] = None
 
 class ResBudget(BaseModel):
     id: int
@@ -110,21 +117,34 @@ async def get_budgets(db_session: DbSessionDependency, user: AuthedUserDependenc
                 DbMovement.amount,
                 DbMovement.is_deposit,
                 DbMovement.done_at,
+                DbMovementCategory.id.label("mvt_id"),
+                DbMovementCategory.title.label("mvt_title"),
+                DbMovementCategory.description.label("mvt_desc"),
+                DbMovementCategory.user_id.label("mvt_user_id"),
             )
+            .outerjoin(DbMovementCategory)
             .where(DbMovement.budget_id.in_(budgets_ids))
             .order_by(sql_desc(DbMovement.done_at))
         )
 
         for row in db_session.exec(movements_query).mappings():
             movement = ResBudgetMovement(**row)
+            if row["mvt_id"] is not None:
+                movement.category = ResBudgetMovementCategory(
+                    id=row["mvt_id"],
+                    title=row["mvt_title"],
+                    description=row["mvt_desc"],
+                    is_global=row["mvt_user_id"] is None,
+                )
             budgets_results.get(row.budget_id).movements.append(movement)
-
 
     return budgets_results
 
 @router.get("/{budget_id}")
 async def get_budget(db_session: DbSessionDependency, user: AuthedUserDependency, budget_id: int,
                      with_budgets: bool = False):
+    # TODO
+
     return {}
 
 @router.post("/")
@@ -165,7 +185,7 @@ async def delete_budget(db_session: DbSessionDependency, user: AuthedUserDepende
     return {"id": budget_id}
 
 # Movements
-@router.get("/{budget_id}/movements", response_model=dict[int, ResBudgetMovement])
+@router.get("/{budget_id}/movements", response_model=dict[int, ResBudgetMovement], response_model_exclude_none=True)
 async def get_budget_movements(db_session: DbSessionDependency, user: AuthedUserDependency, budget_id: int):
     target_budget: DbBudget | None = db_session.exec(
         sql_select(DbBudget)
@@ -184,7 +204,12 @@ async def get_budget_movements(db_session: DbSessionDependency, user: AuthedUser
             DbMovement.amount,
             DbMovement.is_deposit,
             DbMovement.done_at,
+            DbMovementCategory.id.label("mvt_id"),
+            DbMovementCategory.title.label("mvt_title"),
+            DbMovementCategory.description.label("mvt_desc"),
+            DbMovementCategory.user_id.label("mvt_user_id"),
         )
+        .outerjoin(DbMovementCategory)
         .where(DbMovement.budget_id == budget_id)
         .order_by(sql_desc(DbMovement.done_at))
     )
@@ -193,6 +218,13 @@ async def get_budget_movements(db_session: DbSessionDependency, user: AuthedUser
 
     for row in db_session.exec(query_movements).mappings():
         movement = ResBudgetMovement(**row)
+        if row["mvt_id"] is not None:
+            movement.category = ResBudgetMovementCategory(
+                id=row["mvt_id"],
+                title=row["mvt_title"],
+                description=row["mvt_desc"],
+                is_global=row["mvt_user_id"] is None,
+            )
         movements[movement.id] = movement
 
     return movements
