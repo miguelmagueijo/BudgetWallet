@@ -6,8 +6,8 @@ T = TypeVar("T")
 
 class ArrayDataResponseModel(BaseModel, Generic[T]):
     data: list[T]
-    meta: dict[str, T] | None = None
+    meta: dict[str, Any] | None = None
 
 class ObjectDataResponseModel(BaseModel, Generic[T]):
     data: T
-    meta: dict[str, T] | None = None
+    meta: dict[str, Any] | None = None
