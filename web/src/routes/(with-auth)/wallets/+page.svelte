@@ -3,6 +3,14 @@
 	import { DataStore } from "$lib/data.svelte";
 	import { onMount } from "svelte";
 
+	interface IMovement {
+		id: number;
+		title: string;
+		amount: string;
+		is_deposit: boolean;
+		done_at: string;
+	}
+
 	interface IBudget {
 		id: number;
 		name: string;
@@ -18,12 +26,123 @@
 		budgets?: Array<IBudget>;
 	}
 
+	interface BudgetDetailsInfo {
+		walletColor?: string;
+		walletName: string;
+		budgetId: number;
+		budgetName: string;
+		budgetBalance: number;
+	}
+
 	const walletsStore: DataStore<IWallet> = new DataStore<IWallet>("/api/wallets/?with_budgets=true");
+	let movementsStore: DataStore<IMovement> | null = $state(null);
+
+	let budgetDetailsInfo: BudgetDetailsInfo | null = null;
+	let showBudgetDetails = $state(false);
 
 	onMount(() => {
 		walletsStore.load();
 	});
+
+	function openBudgetDetailsDrawer(wallet: IWallet, budget: IBudget) {
+		showBudgetDetails = true;
+
+		if (budgetDetailsInfo && budgetDetailsInfo.budgetId === budget.id) {
+			return;
+		}
+
+		budgetDetailsInfo = {
+			walletColor: wallet.color,
+			walletName: wallet.name,
+			budgetId: budget.id,
+			budgetName: budget.name,
+			budgetBalance: Number(Number(budget.balance).toFixed(2)),
+		};
+		movementsStore = new DataStore(`/api/budgets/${budget.id}/movements`, true);
+	}
+
+	function closeBudgetDetailsDrawer() {
+		showBudgetDetails = false;
+	}
 </script>
+
+<svelte:head>
+	<title>BW | Wallets</title>
+</svelte:head>
+
+<div class="fixed inset-0 top-0 right-0 bottom-0 left-0 z-50 duration-200" class:opacity-0={!showBudgetDetails} class:invisible={!showBudgetDetails}>
+	<div class="flex">
+		<button onclick={closeBudgetDetailsDrawer} title="" class="block h-screen flex-1 bg-black/75"></button>
+		<div
+			class="absolute top-0 right-0 bottom-0 flex min-w-1/2 flex-col bg-primary-950 transition-all duration-200"
+			class:translate-x-full={!showBudgetDetails}
+			class:translate-x-0={showBudgetDetails}
+		>
+			<div class="h-3" style:background-color={budgetDetailsInfo?.walletColor}></div>
+			<div class="p-4">
+				<div class="text-2xl font-semibold" style:color={budgetDetailsInfo?.walletColor}>
+					{budgetDetailsInfo?.walletName}
+				</div>
+				<div class="mt-4 flex justify-between">
+					<div>
+						<div class="text-xs opacity-50">Budget</div>
+						<div class="text-xl font-bold">{budgetDetailsInfo?.budgetName}</div>
+					</div>
+					<div>
+						<div class="text-right text-xs opacity-50">Balance</div>
+						<div>
+							<b class="text-xl" class:text-primary-500={(budgetDetailsInfo?.budgetBalance ?? 0) > 0}>
+								{budgetDetailsInfo?.budgetBalance}
+							</b>
+							<small>€</small>
+						</div>
+					</div>
+				</div>
+				<div class="mt-2">
+					<div class="text-xs opacity-50">Description</div>
+					<div>Money available to spend with phone/card</div>
+				</div>
+				<hr class="mt-4" />
+				<div class="mt-6">
+					<div class="flex flex-col gap-y-2 rounded-lg bg-primary-1000 p-4">
+						<div class="font-bold">Movements</div>
+						{#if movementsStore}
+							{#each movementsStore.dataOut as movement (movement.id)}
+								{@const realAmount = Number(Number(movement.amount).toFixed(2)) * (movement.is_deposit ? 1 : -1)}
+								{@const realDoneDate = new Date(movement.done_at).toLocaleDateString("pt-PT", { hour: "2-digit", minute: "2-digit" })}
+								<div class="flex items-center justify-between rounded-lg border-2 border-primary-0/15 p-2">
+									<div>
+										<div class="text-sm opacity-50">
+											{realDoneDate}
+										</div>
+										<div>
+											{movement.title}
+										</div>
+									</div>
+									<div class="font-bold" class:text-primary-500={movement.is_deposit} class:text-red-500={!movement.is_deposit}>
+										<b>{realAmount}</b> <small>€</small>
+									</div>
+								</div>
+							{/each}
+						{:else}
+							Something went wrong!
+						{/if}
+					</div>
+				</div>
+			</div>
+			<div class="flex flex-1 items-end justify-start">
+				<div class="w-full bg-primary-1000 px-4 py-6">
+					<button
+						class="cursor-pointer rounded-lg border-2 border-primary-800/50 px-6 py-2 text-primary-0 duration-200 hover:bg-primary-0/10"
+						onclick={closeBudgetDetailsDrawer}
+					>
+						Close
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 
 <section>
 	<a href="/home" class="mb-4 flex w-fit items-center gap-2 underline opacity-50">
@@ -70,14 +189,17 @@
 						{#if wallet.budgets}
 							{#each wallet.budgets as budget (budget.id)}
 								{@const budgetBalance = Number(Number(budget.balance).toFixed(2))}
-								<div class="flex justify-between rounded-lg border-2 border-primary-0/25 bg-primary-1000 p-4">
+								<button
+									class="flex cursor-pointer justify-between rounded-lg border-2 border-primary-0/25 bg-primary-1000 p-4 duration-200 hover:bg-primary-0/10"
+									onclick={() => openBudgetDetailsDrawer(wallet, budget)}
+								>
 									<span class="font-bold">
 										{budget.name}
 									</span>
 									<span>
 										<b class:text-primary-500={budgetBalance > 0}>{budgetBalance}</b> <small>€</small>
 									</span>
-								</div>
+								</button>
 							{:else}
 								<div class="p-4 bg-primary-1000 rounded-lg text-primary-0/35">No budgets</div>
 							{/each}
@@ -91,4 +213,14 @@
 			{/each}
 		</div>
 	{/if}
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
+	<br />
 </section>
