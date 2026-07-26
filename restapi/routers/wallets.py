@@ -38,7 +38,7 @@ class ResWallet(BaseModel):
     budgets: Optional[list[ResWalletBudget]] = None
 
 def fetch_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: Optional[int] = None,
-                  with_budgets: bool = False):
+                  with_budgets: bool = False) -> tuple[dict[int, ResWallet], Decimal]:
     wallets_results: dict[int, ResWallet] = {}
 
     filters = [DbWallet.user == user]
@@ -71,6 +71,8 @@ def fetch_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, w
         .order_by(DbWallet.name)
     )
 
+    account_balance = Decimal(0)
+
     for row in db_session.exec(wallets_query).mappings():
         wallet = wallets_results.get(row["wallet_id"])
         if not wallet:
@@ -92,17 +94,24 @@ def fetch_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, w
             ))
 
         wallet.balance += row["budget_balance"]
+        account_balance += row["budget_balance"]
 
-    return wallets_results
+    return wallets_results, account_balance
 
 @router.get("/", response_model=ArrayDataResponseModel[ResWallet], response_model_exclude_none=True)
 async def get_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, with_budgets: bool = False):
-    return ArrayDataResponseModel(data=fetch_wallets(db_session, user, with_budgets=with_budgets).values())
+    result = fetch_wallets(db_session, user, with_budgets=with_budgets)
+
+    meta = {
+        "account_balance": result[1]
+    }
+
+    return ArrayDataResponseModel(data=result[0].values(), meta=meta)
 
 @router.get("/{wallet_id}", response_model=ObjectDataResponseModel[ResWallet], response_model_exclude_none=True)
 async def get_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int,
                      with_budgets: bool = False):
-    result = fetch_wallets(db_session, user, wallet_id, with_budgets)
+    result = fetch_wallets(db_session, user, wallet_id, with_budgets)[0]
 
     if len(result) == 0:
         raise HTTPException(status_code=404, detail="Wallet not found")
