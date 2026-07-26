@@ -8,6 +8,7 @@
 	import Toast from "$lib/components/Toast.svelte";
 	import { ToastStore } from "$lib/toast.svelte";
 	import { setContext } from "svelte";
+	import { page } from "$app/state";
 
 	let { children }: LayoutProps = $props();
 	const toastStore = new ToastStore();
@@ -22,16 +23,18 @@
 <div class="flex h-screen overflow-auto">
 	<nav class="sticky top-0 z-10 flex h-screen w-24 flex-col items-center justify-between bg-primary-925 p-6">
 		<div class="flex flex-col">
-			<a href="/home" class="rounded-xl bg-primary-600 p-4 text-primary-0">
+			<a href="/home" class="nav-button nav-green" class:active={page.url.pathname.startsWith("/home")}>
 				<Icon icon="streamline-ultimate:money-wallet-open-bold" class="size-6" />
 			</a>
 			<hr class="my-5 rounded-full border-2 opacity-15" />
-			<a href="/wallets" class="nav-button">
-				<Icon icon="material-symbols:wallet" class="m-auto size-6" />
-			</a>
+			<div class="flex flex-col gap-y-4">
+				<a href="/wallets" class="nav-button" class:active={page.url.pathname.startsWith("/wallets")}>
+					<Icon icon="material-symbols:wallet" class="m-auto size-6" />
+				</a>
+			</div>
 		</div>
-		<div class="flex flex-col gap-4">
-			<a href="/account/settings/" class="nav-button">
+		<div class="flex flex-col gap-y-4">
+			<a href="/account/settings" class="nav-button" class:active={page.url.pathname.startsWith("/account/settings")}>
 				<Icon icon={ICONS_NAMES.accountSettings} class="m-auto size-6" />
 			</a>
 			<a href="/logout" class="nav-button nav-red">
@@ -59,8 +62,18 @@
 		@apply rounded-xl border-2 border-primary-0/15 p-4 text-primary-0 duration-200;
 	}
 
-	.nav-button:hover {
+	.nav-button:hover,
+	.nav-button.active {
 		@apply border-primary-0 bg-primary-0 text-primary-1000;
+	}
+
+	.nav-button.nav-green {
+		@apply border-primary-600/50 text-primary-600;
+	}
+
+	.nav-button.nav-green:hover,
+	.nav-button.nav-green.active {
+		@apply bg-primary-600 text-primary-0;
 	}
 
 	.nav-button.nav-red {
