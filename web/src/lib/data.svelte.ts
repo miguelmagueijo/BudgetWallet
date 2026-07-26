@@ -2,6 +2,7 @@ export class DataStore<T> {
 	private filterFunction: ((element: T) => boolean) | null = $state(null);
 	private sortFunction: ((a: T, b: T) => number) | null = $state(null);
 	private originalData: Array<T> = $state([]);
+	private apiPath: string;
 
 	public loading: boolean = $state(false);
 	public dataOut: Array<T> = $derived.by(() => {
@@ -22,11 +23,44 @@ export class DataStore<T> {
 		return output;
 	});
 
-	constructor(isLoading: boolean) {
-		this.loading = isLoading;
+	// TODO: falta passar o toast storage!
+	constructor(apiPath: string, loadData: boolean = false) {
+		this.apiPath = apiPath;
+
+		if (loadData) {
+			this.load();
+		}
 	}
 
-	public setData(data: Array<T>) {
+	public load() {
+		if (this.loading) {
+			return;
+		}
+
+		this.loading = true;
+
+		fetch(this.apiPath, {
+			credentials: "include",
+		})
+			.then(async (res) => {
+				return [!res.ok, await res.json()];
+			})
+			.then(([isError, budgets]) => {
+				if (isError) {
+					console.log(budgets.detail);
+				} else {
+					this.setData(budgets.data);
+				}
+			})
+			.catch((err) => {
+				console.log(err);
+			})
+			.finally(() => {
+				this.loading = false;
+			});
+	}
+
+	private setData(data: Array<T>) {
 		this.originalData = data;
 	}
 
