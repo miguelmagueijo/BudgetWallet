@@ -10,6 +10,7 @@ from sqlmodel import (select as sql_select, and_ as sql_and_, func as sql_func, 
 from db_models import DbWallet, DbBudget, DbMovement, DbMovementCategory
 from db_utils import generic_record_delete, generic_record_patch
 from dependencies import AuthedUserDependency, DbSessionDependency
+from response_models import ArrayDataResponseModel
 from rules import RegexPatterns
 
 router = APIRouter(prefix="/budgets")
@@ -38,6 +39,7 @@ class ResBudgetMovementCategory(BaseModel):
     id: int
     title: str
     description: Optional[str] = None
+    color: Optional[str] = None
     is_global: bool
 
 class ResBudgetMovement(BaseModel):
@@ -146,7 +148,7 @@ async def delete_budget(db_session: DbSessionDependency, user: AuthedUserDepende
     return {"id": budget_id}
 
 # Movements
-@router.get("/{budget_id}/movements", response_model=dict[int, ResBudgetMovement], response_model_exclude_none=True)
+@router.get("/{budget_id}/movements", response_model=ArrayDataResponseModel, response_model_exclude_none=True)
 async def get_budget_movements(db_session: DbSessionDependency, user: AuthedUserDependency, budget_id: int):
     target_budget: DbBudget | None = db_session.exec(
         sql_select(DbBudget)
@@ -168,6 +170,7 @@ async def get_budget_movements(db_session: DbSessionDependency, user: AuthedUser
             DbMovementCategory.id.label("mvt_id"),
             DbMovementCategory.title.label("mvt_title"),
             DbMovementCategory.description.label("mvt_desc"),
+            DbMovementCategory.color.label("mvt_color"),
             DbMovementCategory.user_id.label("mvt_user_id"),
         )
         .outerjoin(DbMovementCategory)
@@ -175,7 +178,7 @@ async def get_budget_movements(db_session: DbSessionDependency, user: AuthedUser
         .order_by(sql_desc(DbMovement.done_at))
     )
 
-    movements: dict[int, ResBudgetMovement] = {}
+    movements: list[ResBudgetMovement] = []
 
     for row in db_session.exec(query_movements).mappings():
         movement = ResBudgetMovement(**row)
@@ -184,11 +187,12 @@ async def get_budget_movements(db_session: DbSessionDependency, user: AuthedUser
                 id=row["mvt_id"],
                 title=row["mvt_title"],
                 description=row["mvt_desc"],
+                color=row["mvt_color"],
                 is_global=row["mvt_user_id"] is None,
             )
-        movements[movement.id] = movement
+        movements.append(movement)
 
-    return movements
+    return ArrayDataResponseModel(data=movements)
 
 @router.post("/{budget_id}/movements")
 async def create_new_budget_movement(db_session: DbSessionDependency, user: AuthedUserDependency, budget_id: int,
