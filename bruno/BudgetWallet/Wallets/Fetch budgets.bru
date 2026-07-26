@@ -5,14 +5,13 @@ meta {
 }
 
 get {
-  url: http://127.0.0.1:8000/budgets/?with_movements=true
+  url: http://127.0.0.1:8000/wallets/9/budgets/?with_movements=true
   body: none
   auth: inherit
 }
 
 params:query {
   with_movements: true
-  ~wallet_id: 6
 }
 
 settings {
