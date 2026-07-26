@@ -1,17 +1,16 @@
 meta {
   name: Fetch one
   type: http
-  seq: 5
+  seq: 3
 }
 
 get {
-  url: http://127.0.0.1:8000/budgets/?wallet_id=6&with_movements=true
+  url: http://127.0.0.1:8000/budgets/1?with_movements=true
   body: none
   auth: inherit
 }
 
 params:query {
-  wallet_id: 6
   with_movements: true
 }
 

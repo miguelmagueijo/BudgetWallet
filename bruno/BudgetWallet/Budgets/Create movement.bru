@@ -1,11 +1,11 @@
 meta {
   name: Create movement
   type: http
-  seq: 6
+  seq: 4
 }
 
 post {
-  url: http://127.0.0.1:8000/budgets/1/movements
+  url: http://127.0.0.1:8000/budgets/8/movements
   body: multipartForm
   auth: inherit
 }
@@ -13,7 +13,7 @@ post {
 body:multipart-form {
   title: Teste
   amount: 15
-  category_id: 25
+  ~category_id: 25
 }
 
 settings {
