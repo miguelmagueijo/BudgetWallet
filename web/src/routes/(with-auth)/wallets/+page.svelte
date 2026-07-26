@@ -3,12 +3,20 @@
 	import { DataStore } from "$lib/data.svelte";
 	import { onMount } from "svelte";
 
+	interface IMovementCategory {
+		id: number;
+		title: string;
+		color?: string;
+		is_global: boolean;
+	}
+
 	interface IMovement {
 		id: number;
 		title: string;
 		amount: string;
 		is_deposit: boolean;
 		done_at: string;
+		category?: IMovementCategory;
 	}
 
 	interface IBudget {
@@ -35,9 +43,9 @@
 	}
 
 	const walletsStore: DataStore<IWallet> = new DataStore<IWallet>("/api/wallets/?with_budgets=true");
-	let movementsStore: DataStore<IMovement> | null = $state(null);
 
-	let budgetDetailsInfo: BudgetDetailsInfo | null = null;
+	let movementsStore: DataStore<IMovement> | null = $state(null);
+	let budgetDetailsInfo: BudgetDetailsInfo | null = $state(null);
 	let showBudgetDetails = $state(false);
 
 	onMount(() => {
@@ -110,17 +118,27 @@
 							{#each movementsStore.dataOut as movement (movement.id)}
 								{@const realAmount = Number(Number(movement.amount).toFixed(2)) * (movement.is_deposit ? 1 : -1)}
 								{@const realDoneDate = new Date(movement.done_at).toLocaleDateString("pt-PT", { hour: "2-digit", minute: "2-digit" })}
-								<div class="flex items-center justify-between rounded-lg border-2 border-primary-0/15 p-2">
-									<div>
+								<div class=" border-2 border-primary-0/15 p-2">
+									<div class="flex items-center justify-between">
 										<div class="text-sm opacity-50">
 											{realDoneDate}
 										</div>
+										{#if movement.category}
+											<div
+												class="w-fit rounded-full px-4 text-xs font-semibold"
+												style:background-color={movement.category.color}
+											>
+												{movement.category.title}
+											</div>
+										{/if}
+									</div>
+									<div class="flex items-center justify-between rounded-lg">
 										<div>
 											{movement.title}
 										</div>
-									</div>
-									<div class="font-bold" class:text-primary-500={movement.is_deposit} class:text-red-500={!movement.is_deposit}>
-										<b>{realAmount}</b> <small>€</small>
+										<div class="font-bold" class:text-primary-500={movement.is_deposit} class:text-red-500={!movement.is_deposit}>
+											<b>{realAmount}</b> <small>€</small>
+										</div>
 									</div>
 								</div>
 							{/each}
