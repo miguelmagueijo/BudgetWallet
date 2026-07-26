@@ -25,7 +25,7 @@ class DbUser(BaseDbModel, table=True):
     is_active: bool = Field(nullable=False, default=False)
     is_admin: bool = Field(nullable=False, default=False)
 
-    wallets: list["DbWallet"] = Relationship(back_populates="user")
+    wallets: list["DbWallet"] = Relationship(back_populates="user", passive_deletes="all")
     movement_category: list["DbMovementCategory"] = Relationship(back_populates="user")
 
 class DbWallet(BaseDbModel, table=True):
@@ -35,10 +35,11 @@ class DbWallet(BaseDbModel, table=True):
     description: str = Field(nullable=True)
     iconify_name: str = Field(nullable=False)
     color: str = Field(nullable=True, regex=r"^#[0-9a-fA-F]{6}$")
+
     user_id: int = Field(nullable=False, foreign_key="user_account.id")
     user: DbUser = Relationship(back_populates="wallets")
 
-    budgets: list["DbBudget"] = Relationship(back_populates="wallet")
+    budgets: list["DbBudget"] = Relationship(back_populates="wallet", passive_deletes="all")
 
 class DbBudget(BaseDbModel, table=True):
     __tablename__ = "budget"
@@ -51,7 +52,7 @@ class DbBudget(BaseDbModel, table=True):
     wallet_id: int = Field(nullable=False, foreign_key="wallet.id")
     wallet: DbWallet = Relationship(back_populates="budgets")
 
-    movements: list["DbMovement"] = Relationship(back_populates="budget")
+    movements: list["DbMovement"] = Relationship(back_populates="budget", passive_deletes="all")
 
 class DbMovementCategory(BaseDbModel, table=True):
     __tablename__ = "movement_category"
@@ -63,7 +64,7 @@ class DbMovementCategory(BaseDbModel, table=True):
     user_id: int = Field(nullable=False, foreign_key="user_account.id")
     user: DbUser = Relationship(back_populates="movement_category")
 
-    movements: list["DbMovement"] = Relationship(back_populates="category")
+    movements: list["DbMovement"] = Relationship(back_populates="category", passive_deletes="all")
 
 class DbMovement(BaseDbModel, table=True):
     __tablename__ = "movement"
