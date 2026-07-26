@@ -2,6 +2,7 @@
 	import Icon from "@iconify/svelte";
 	import { DataStore } from "$lib/data.svelte";
 	import { onMount } from "svelte";
+	import { getTextColorForHexBg } from "$lib/colorsUtils";
 
 	interface IMovementCategory {
 		id: number;
@@ -118,7 +119,7 @@
 							{#each movementsStore.dataOut as movement (movement.id)}
 								{@const realAmount = Number(Number(movement.amount).toFixed(2)) * (movement.is_deposit ? 1 : -1)}
 								{@const realDoneDate = new Date(movement.done_at).toLocaleDateString("pt-PT", { hour: "2-digit", minute: "2-digit" })}
-								<div class=" border-2 border-primary-0/15 p-2">
+								<div class="rounded-lg border-2 border-primary-0/15 p-3">
 									<div class="flex items-center justify-between">
 										<div class="text-sm opacity-50">
 											{realDoneDate}
@@ -127,12 +128,13 @@
 											<div
 												class="w-fit rounded-full px-4 text-xs font-semibold"
 												style:background-color={movement.category.color}
+												style:color={getTextColorForHexBg(movement.category.color)}
 											>
 												{movement.category.title}
 											</div>
 										{/if}
 									</div>
-									<div class="flex items-center justify-between rounded-lg">
+									<div class="flex items-center justify-between">
 										<div>
 											{movement.title}
 										</div>
