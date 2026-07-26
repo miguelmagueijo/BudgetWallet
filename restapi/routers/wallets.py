@@ -9,6 +9,7 @@ from sqlmodel import (select as sql_select, and_ as sql_and_, func as sql_func, 
 from db_utils import generic_record_delete, generic_record_patch
 from dependencies import DbSessionDependency, AuthedUserDependency
 from db_models import DbWallet, DbBudget, DbMovement
+from response_models import ArrayDataResponseModel, ObjectDataResponseModel
 from rules import RegexPatterns
 
 router = APIRouter(prefix="/wallets")
@@ -26,7 +27,7 @@ class ResWalletBudget(BaseModel):
     id: int
     name: str
     color: Optional[str]
-    total: Decimal = Decimal(0)
+    balance: Decimal = Decimal(0)
 
 class ResWallet(BaseModel):
     id: int
@@ -87,18 +88,18 @@ def fetch_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, w
                 id=row["budget_id"],
                 name=row["budget_name"],
                 color=row["budget_color"],
-                total=row["budget_balance"]
+                balance=row["budget_balance"]
             ))
 
         wallet.balance += row["budget_balance"]
 
     return wallets_results
 
-@router.get("/", response_model=Union[dict[int,ResWallet], ResWallet], response_model_exclude_none=True)
+@router.get("/", response_model=ArrayDataResponseModel[ResWallet], response_model_exclude_none=True)
 async def get_wallets(db_session: DbSessionDependency, user: AuthedUserDependency, with_budgets: bool = False):
-    return fetch_wallets(db_session, user, with_budgets=with_budgets)
+    return ArrayDataResponseModel(data=fetch_wallets(db_session, user, with_budgets=with_budgets).values())
 
-@router.get("/{wallet_id}")
+@router.get("/{wallet_id}", response_model=ObjectDataResponseModel[ResWallet], response_model_exclude_none=True)
 async def get_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int,
                      with_budgets: bool = False):
     result = fetch_wallets(db_session, user, wallet_id, with_budgets)
@@ -106,7 +107,7 @@ async def get_wallet(db_session: DbSessionDependency, user: AuthedUserDependency
     if len(result) == 0:
         raise HTTPException(status_code=404, detail="Wallet not found")
 
-    return result[wallet_id]
+    return ObjectDataResponseModel(data=result[wallet_id])
 
 @router.get("/{wallet_id}/budgets")
 async def get_budgets_of_wallet(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int):
