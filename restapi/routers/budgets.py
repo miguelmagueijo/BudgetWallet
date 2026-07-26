@@ -20,7 +20,6 @@ class ReqNewBudget(BaseModel):
     description: Optional[str] = Field(default=None, max_length=512)
     iconify_name: Optional[str] = Field(default=None, pattern=RegexPatterns.ICONIFY_ICON, alias="icon")
     color: Optional[str] = Field(default=None, pattern=RegexPatterns.HEX_COLOR)
-    wallet_id: int = Field()
 
 class ReqEditBudget(ReqNewBudget):
     name: Optional[str] = Field(default=None, pattern=RegexPatterns.WALLET_BUDGET_NAME)
@@ -56,86 +55,6 @@ class ResBudget(BaseModel):
     color: Optional[str]
     balance: Decimal = Decimal(0)
     movements: Optional[list[ResBudgetMovement]] = None
-
-def does_wallet_belong_to_user(db_session: Session, wallet_id: int, user_id: int) -> bool:
-    return db_session.exec(
-        sql_select(DbWallet.id).where(sql_and_(DbWallet.id == wallet_id, DbWallet.user_id == user_id))
-    ).first() is not None
-
-@router.get("/", response_model=dict[int, ResBudget], response_model_exclude_none=True)
-async def get_budgets(db_session: DbSessionDependency, user: AuthedUserDependency, wallet_id: int,
-                      with_movements: bool = False):
-    budgets_results: dict[int, ResBudget] = {}
-
-    filters = [DbWallet.id == wallet_id, DbWallet.user_id == user.id]
-    budgets_query = (
-        sql_select(
-            DbBudget.id,
-            DbBudget.name,
-            DbBudget.iconify_name.label("icon"),
-            DbBudget.color,
-            sql_func.coalesce(
-                sql_func.sum(
-                    sql_case(
-                        (DbMovement.is_deposit, DbMovement.amount),
-                        else_=-DbMovement.amount
-                    )
-                ),
-                sql_literal(0)
-            ).label("balance")
-        )
-        .outerjoin_from(DbBudget, DbMovement)
-        .join(DbWallet)
-        .where(sql_and_(*filters))
-        .group_by(DbBudget.id, DbBudget.name)
-        .order_by(DbBudget.name)
-    )
-
-    budgets_ids = []
-    for row in db_session.exec(budgets_query).mappings():
-        budget = ResBudget(
-            **row,
-            movements=[] if with_movements else None,
-        )
-
-        budgets_results[budget.id] = budget
-
-        if with_movements:
-            budgets_ids.append(budget.id)
-
-        budget.balance = row["balance"]
-
-    if len(budgets_ids) > 0:
-        movements_query = (
-            sql_select(
-                DbMovement.id,
-                DbMovement.budget_id,
-                DbMovement.title,
-                DbMovement.amount,
-                DbMovement.is_deposit,
-                DbMovement.done_at,
-                DbMovementCategory.id.label("mvt_id"),
-                DbMovementCategory.title.label("mvt_title"),
-                DbMovementCategory.description.label("mvt_desc"),
-                DbMovementCategory.user_id.label("mvt_user_id"),
-            )
-            .outerjoin(DbMovementCategory)
-            .where(DbMovement.budget_id.in_(budgets_ids))
-            .order_by(sql_desc(DbMovement.done_at))
-        )
-
-        for row in db_session.exec(movements_query).mappings():
-            movement = ResBudgetMovement(**row)
-            if row["mvt_id"] is not None:
-                movement.category = ResBudgetMovementCategory(
-                    id=row["mvt_id"],
-                    title=row["mvt_title"],
-                    description=row["mvt_desc"],
-                    is_global=row["mvt_user_id"] is None,
-                )
-            budgets_results.get(row.budget_id).movements.append(movement)
-
-    return budgets_results
 
 @router.get("/{budget_id}", response_model=ResBudget, response_model_exclude_none=True)
 async def get_budget(db_session: DbSessionDependency, user: AuthedUserDependency, budget_id: int,
@@ -200,18 +119,6 @@ async def get_budget(db_session: DbSessionDependency, user: AuthedUserDependency
             res_budget.movements.append(movement)
 
     return res_budget
-
-@router.post("/")
-async def create_budget(db_session: DbSessionDependency, user: AuthedUserDependency, form_data: Annotated[ReqNewBudget, Form()]):
-    if not does_wallet_belong_to_user(db_session, form_data.wallet_id, user.id):
-        raise HTTPException(status_code=400, detail="Wallet to insert budget not found")
-
-    new_budget = DbBudget(**form_data.model_dump())
-
-    db_session.add(new_budget)
-    db_session.commit()
-
-    return { "id": new_budget.id }
 
 @router.patch("/{budget_id}")
 async def update_budget(db_session: DbSessionDependency, user: AuthedUserDependency, budget_id: int,
