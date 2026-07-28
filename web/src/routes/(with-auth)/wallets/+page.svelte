@@ -3,6 +3,8 @@
 	import { DataStore } from "$lib/data.svelte";
 	import { onMount } from "svelte";
 	import { getTextColorForHexBg } from "$lib/colorsUtils";
+	import { ICONS_NAMES } from "$lib";
+	import Drawer from "$lib/components/Drawer.svelte";
 
 	interface IMovementCategory {
 		id: number;
@@ -73,11 +75,76 @@
 	function closeBudgetDetailsDrawer() {
 		showBudgetDetails = false;
 	}
+
+	let showDetailsWalletDrawer = $state(true);
+	let walletDtlsName = $state("");
+	let walletDtlsIcon = $state("");
+	let walletDtlsColor = $state("#FFFFFF");
 </script>
 
 <svelte:head>
 	<title>BW | Wallets</title>
 </svelte:head>
+
+<Drawer bind:showDrawer={showDetailsWalletDrawer}>
+	{#snippet header()}
+		<div class="flex items-center justify-between">
+			<h2 class="text-xl font-bold">New wallet</h2>
+			<button class="cursor-pointer text-gray-600" onclick={() => (showDetailsWalletDrawer = false)}>
+				<Icon icon={ICONS_NAMES.x} class="size-5" />
+			</button>
+		</div>
+		<p class="mt-2 text-gray-500">Create a new tracking of your money</p>
+	{/snippet}
+	<form>
+		<label class="block font-semibold">
+			Name <span class="text-red-500">*</span>
+			<input type="text" class="mt-2 w-full rounded-lg border-2 border-primary-800 bg-primary-1000" bind:value={walletDtlsName} />
+		</label>
+		<label class="mt-8 block font-semibold">
+			Color
+			<input type="color" class="mt-2 h-11 w-full rounded-lg border-2 border-transparent" bind:value={walletDtlsColor} />
+			<small class="text-xs text-gray-500">Defaults to white</small>
+		</label>
+		<div class="mt-8 items-center justify-between gap-4 {walletDtlsIcon ? 'grid grid-cols-[1fr_auto]' : ''}">
+			<label class="block font-semibold">
+				Icon
+				<input type="text" class="mt-2 h-11 w-full rounded-lg border-2 border-primary-800 bg-primary-1000" bind:value={walletDtlsIcon} />
+				<small class="text-xs text-gray-500">
+					<a class="mt-2 flex items-center gap-1 underline" href="https://icon-sets.iconify.design/" target="_blank">
+						<span>Open icons catalog</span>
+						<Icon icon="lucide:external-link" />
+					</a>
+				</small>
+			</label>
+			{#if walletDtlsIcon}
+				<div
+					class="flex size-18 items-center justify-center rounded-lg border-2 border-primary-800 p-3"
+					style:color={walletDtlsColor}
+					style:border-color={walletDtlsColor}
+				>
+					<Icon icon={walletDtlsIcon} class="size-full" />
+				</div>
+			{/if}
+		</div>
+	</form>
+	{#snippet footer()}
+		<div class="flex gap-2">
+			<button
+				class="w-26 cursor-pointer rounded-lg border-2 border-transparent bg-primary-600 py-2 font-semibold text-primary-0 duration-200 hover:bg-primary-800"
+				onclick={() => (showDetailsWalletDrawer = false)}
+			>
+				Create
+			</button>
+			<button
+				class="w-26 cursor-pointer rounded-lg border-2 border-transparent py-2 font-semibold duration-200 hover:bg-gray-800"
+				onclick={() => (showDetailsWalletDrawer = false)}
+			>
+				Cancel
+			</button>
+		</div>
+	{/snippet}
+</Drawer>
 
 <div class="fixed inset-0 top-0 right-0 bottom-0 left-0 z-50 duration-200" class:opacity-0={!showBudgetDetails} class:invisible={!showBudgetDetails}>
 	<div class="flex">
@@ -170,6 +237,15 @@
 		<span>Home</span>
 	</a>
 	<h1 class="text-5xl font-bold">My wallets</h1>
+	<div class="mt-12">
+		<button
+			class="flex cursor-pointer items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-semibold"
+			onclick={() => (showDetailsWalletDrawer = true)}
+		>
+			<Icon icon={ICONS_NAMES.plus} class="size-4" />
+			New wallet
+		</button>
+	</div>
 	{#if walletsStore.loading}
 		<div class="mt-12">
 			{#each [1, 2, 3] as i (i)}
@@ -233,14 +309,4 @@
 			{/each}
 		</div>
 	{/if}
-	<br />
-	<br />
-	<br />
-	<br />
-	<br />
-	<br />
-	<br />
-	<br />
-	<br />
-	<br />
 </section>
