@@ -12,6 +12,9 @@ export const ICONS_NAMES = {
 	dash: "pajamas:dash",
 	arrowUp: "gravity-ui:arrow-up",
 	arrowDown: "gravity-ui:arrow-down",
+	plus: "fluent:add-12-filled",
+	x: "fluent:dismiss-12-filled",
+	close: "fluent:dismiss-12-filled",
 } as const;
 
 export const LOCAL_STORAGE_NAMES = {
