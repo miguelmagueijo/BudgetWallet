@@ -48,7 +48,7 @@
 		</div>
 	</nav>
 
-	<main class="relative flex-1 overflow-auto px-10 py-6">
+	<main class="relative flex-1 overflow-auto px-10 pt-6 pb-15">
 		{@render children()}
 	</main>
 
