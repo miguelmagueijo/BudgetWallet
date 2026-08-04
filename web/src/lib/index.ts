@@ -15,6 +15,7 @@ export const ICONS_NAMES = {
 	plus: "fluent:add-12-filled",
 	x: "fluent:dismiss-12-filled",
 	close: "fluent:dismiss-12-filled",
+	edit: "fluent:edit-12-filled",
 } as const;
 
 export const LOCAL_STORAGE_NAMES = {
